@@ -1,0 +1,300 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 150 20% 98%;
+    --foreground: 160 35% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 35% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 35% 8%;
+    --primary: 158 64% 28%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 158 18% 95%;
+    --secondary-foreground: 160 25% 18%;
+    --muted: 158 12% 94%;
+    --muted-foreground: 160 8% 42%;
+    --accent: 158 40% 93%;
+    --accent-foreground: 158 64% 22%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 158 14% 88%;
+    --input: 158 14% 88%;
+    --ring: 158 64% 28%;
+    --radius: 0.75rem;
+    --chart-1: 158 64% 32%;
+    --chart-2: 199 89% 48%;
+    --chart-3: 43 96% 56%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 12 76% 61%;
+    --shadow-color: 160 30% 20%;
+  }
+
+  .dark {
+    --background: 160 22% 5%;
+    --foreground: 158 10% 96%;
+    --card: 160 18% 8%;
+    --card-foreground: 158 10% 96%;
+    --popover: 160 18% 8%;
+    --popover-foreground: 158 10% 96%;
+    --primary: 158 55% 42%;
+    --primary-foreground: 160 22% 5%;
+    --secondary: 160 14% 14%;
+    --secondary-foreground: 158 10% 90%;
+    --muted: 160 14% 14%;
+    --muted-foreground: 158 8% 58%;
+    --accent: 160 18% 16%;
+    --accent-foreground: 158 55% 52%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 160 14% 16%;
+    --input: 160 14% 16%;
+    --ring: 158 55% 42%;
+    --shadow-color: 160 30% 2%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.25);
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.18);
+    color: hsl(var(--foreground));
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display), var(--font-inter), system-ui, sans-serif;
+    letter-spacing: -0.025em;
+  }
+}
+
+@layer components {
+  .app-shell-bg {
+    background-color: hsl(var(--background));
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.06), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, hsl(199 89% 48% / 0.04), transparent);
+  }
+
+  .dark .app-shell-bg {
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, hsl(199 89% 48% / 0.05), transparent);
+  }
+
+  .glass-panel {
+    @apply border bg-card/80 backdrop-blur-xl;
+    box-shadow:
+      0 1px 2px hsl(var(--shadow-color) / 0.04),
+      0 4px 16px hsl(var(--shadow-color) / 0.06);
+  }
+
+  .section-label {
+    @apply text-xs font-semibold uppercase tracking-widest text-primary;
+  }
+
+  .stat-accent-income {
+    @apply bg-gradient-to-br from-emerald-500/15 to-emerald-600/5 text-emerald-600 dark:text-emerald-400;
+  }
+
+  .stat-accent-expense {
+    @apply bg-gradient-to-br from-rose-500/15 to-rose-600/5 text-rose-600 dark:text-rose-400;
+  }
+
+  .stat-accent-savings {
+    @apply bg-gradient-to-br from-sky-500/15 to-sky-600/5 text-sky-600 dark:text-sky-400;
+  }
+
+  .stat-accent-wallet {
+    @apply bg-gradient-to-br from-violet-500/15 to-violet-600/5 text-violet-600 dark:text-violet-400;
+  }
+}
+
+@keyframes scroll-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scroll-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+}
+
+@keyframes scroll-border-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes scroll-pill-shimmer {
+  0% {
+    transform: translateX(-130%) skewX(-14deg);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(230%) skewX(-14deg);
+    opacity: 0;
+  }
+}
+
+@keyframes scroll-text-shimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+@keyframes scroll-chevron-flow {
+  0% {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(6px);
+    opacity: 0;
+  }
+}
+
+@keyframes scroll-ripple {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scroll-enter {
+  animation: scroll-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.scroll-glow {
+  animation: scroll-glow-pulse 3s ease-in-out infinite;
+}
+
+.scroll-border-spin {
+  animation: scroll-border-spin 4s linear infinite;
+}
+
+.scroll-pill-shimmer {
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    hsl(0 0% 100% / 0.65) 50%,
+    transparent 70%
+  );
+  animation: scroll-pill-shimmer 2.4s ease-in-out infinite;
+}
+
+.scroll-text-shimmer {
+  animation: scroll-text-shimmer 4s linear infinite;
+}
+
+.scroll-chevron-flow {
+  animation: scroll-chevron-flow 1.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.scroll-chevron-flow-delay {
+  animation-delay: 0.35s;
+}
+
+.scroll-ripple {
+  animation: scroll-ripple 2.7s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted-foreground) / 0.08) 50%,
+    hsl(var(--muted)) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}

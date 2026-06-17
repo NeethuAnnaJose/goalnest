@@ -1,0 +1,24 @@
+{
+  "name": "goalnest",
+  "version": "1.0.0",
+  "private": true,
+  "description": "GoalNest personal finance tracker for India",
+  "workspaces": [
+    "backend",
+    "web"
+  ],
+  "scripts": {
+    "dev:backend": "npm run start:dev --workspace=backend",
+    "dev:web": "npm run dev --workspace=web",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces --if-present",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "db:migrate": "npm run prisma:migrate --workspace=backend",
+    "db:setup": "powershell -ExecutionPolicy Bypass -File ./scripts/setup-db-windows.ps1",
+    "db:seed": "npm run prisma:seed --workspace=backend"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
