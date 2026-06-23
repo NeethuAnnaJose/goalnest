@@ -30,6 +30,8 @@ COPY backend/docker-entrypoint.sh ./backend/docker-entrypoint.sh
 RUN chmod +x ./backend/docker-entrypoint.sh
 
 WORKDIR /app/backend
+RUN npx prisma@5.22.0 generate
+
 EXPOSE 3001
 
 ENTRYPOINT ["sh", "docker-entrypoint.sh"]
