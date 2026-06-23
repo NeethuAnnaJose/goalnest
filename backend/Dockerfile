@@ -9,6 +9,7 @@ COPY backend ./backend
 WORKDIR /app/backend
 RUN npx prisma generate
 RUN npm run build
+RUN test -f dist/main.js
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
