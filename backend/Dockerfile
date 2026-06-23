@@ -31,4 +31,4 @@ RUN chmod +x ./backend/docker-entrypoint.sh
 WORKDIR /app/backend
 EXPOSE 3001
 
-ENTRYPOINT ["./docker-entrypoint.sh"]
+ENTRYPOINT ["sh", "docker-entrypoint.sh"]
