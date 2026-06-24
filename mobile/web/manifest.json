@@ -1,0 +1,11 @@
+{
+  "name": "GoalNest",
+  "short_name": "GoalNest",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#047857",
+  "theme_color": "#047857",
+  "description": "Personal finance tracker for India",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false
+}

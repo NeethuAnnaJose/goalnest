@@ -4,8 +4,9 @@ WORKDIR /app
 COPY mobile ./mobile
 
 WORKDIR /app/mobile
+RUN flutter --version
 RUN flutter pub get
-RUN flutter create --platforms=web .
+RUN flutter config --enable-web
 
 ARG API_BASE_URL=https://backend-production-c2da.up.railway.app/api/v1
 RUN flutter build web --release --dart-define=API_BASE_URL=${API_BASE_URL}
