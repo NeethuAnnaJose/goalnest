@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/core_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/money_formatter.dart';
+import '../../../shared/widgets/app_bottom_sheet.dart';
+import '../../../shared/widgets/app_list_tile.dart';
 import '../../../shared/widgets/empty_view.dart';
 import '../../../shared/widgets/loading_view.dart';
 import '../../../shared/widgets/stat_card.dart';
@@ -16,30 +18,32 @@ class SavingsScreen extends ConsumerWidget {
     final balanceController = TextEditingController();
     String type = 'BANK';
 
-    showModalBottomSheet(
+    showAppBottomSheet(
       context: context,
-      isScrollControlled: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 24, right: 24, top: 24),
-        child: Column(
+      title: 'Add Savings Account',
+      subtitle: 'Track your growing wealth',
+      child: StatefulBuilder(
+        builder: (ctx, setState) => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Add Savings Account', style: Theme.of(ctx).textTheme.titleLarge),
-            const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: type,
               decoration: const InputDecoration(labelText: 'Type'),
               items: ['BANK', 'CASH', 'FIXED_DEPOSIT', 'RECURRING_DEPOSIT']
                   .map((t) => DropdownMenuItem(value: t, child: Text(t.replaceAll('_', ' '))))
                   .toList(),
-              onChanged: (v) => type = v ?? 'BANK',
+              onChanged: (v) => setState(() => type = v ?? 'BANK'),
             ),
             const SizedBox(height: 12),
             TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Account Name')),
             const SizedBox(height: 12),
-            TextField(controller: balanceController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Balance (₹)')),
-            const SizedBox(height: 16),
-            ElevatedButton(
+            TextField(
+              controller: balanceController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Balance (₹)', prefixText: '₹ '),
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
               onPressed: () async {
                 await ref.read(apiServiceProvider).createSavings({
                   'type': type,
@@ -50,10 +54,8 @@ class SavingsScreen extends ConsumerWidget {
                 ref.invalidate(savingsGrowthProvider);
                 if (ctx.mounted) Navigator.pop(ctx);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 48)),
-              child: const Text('Create'),
+              child: const Text('Create Account'),
             ),
-            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -66,7 +68,12 @@ class SavingsScreen extends ConsumerWidget {
     final growthAsync = ref.watch(savingsGrowthProvider);
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(onPressed: () => _showAddDialog(context, ref), child: const Icon(Icons.add)),
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddDialog(context, ref),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Add'),
+      ),
       body: savingsAsync.when(
         loading: () => const LoadingView(),
         error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(savingsProvider)),
@@ -76,8 +83,9 @@ class SavingsScreen extends ConsumerWidget {
               ref.invalidate(savingsProvider);
               ref.invalidate(savingsGrowthProvider);
             },
+            color: AppTheme.primary,
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 88),
               children: [
                 growthAsync.when(
                   loading: () => const SizedBox.shrink(),
@@ -86,29 +94,37 @@ class SavingsScreen extends ConsumerWidget {
                     final f = growth['formatted'] as Map<String, dynamic>? ?? {};
                     return Column(
                       children: [
-                        StatCard(title: 'Total Balance', value: '₹${f['totalBalance'] ?? '0'}', icon: Icons.account_balance),
-                        const SizedBox(height: 8),
-                        StatCard(title: 'Monthly Growth', value: '₹${f['monthlySavingsGrowth'] ?? '0'}', icon: Icons.trending_up, color: AppTheme.primaryLight),
+                        StatCard(
+                          title: 'Total Balance',
+                          value: '₹${f['totalBalance'] ?? '0'}',
+                          icon: Icons.account_balance_rounded,
+                          color: AppTheme.primary,
+                        ),
+                        const SizedBox(height: 10),
+                        StatCard(
+                          title: 'Monthly Growth',
+                          value: '₹${f['monthlySavingsGrowth'] ?? '0'}',
+                          icon: Icons.trending_up_rounded,
+                          color: AppTheme.success,
+                        ),
                         const SizedBox(height: 16),
                       ],
                     );
                   },
                 ),
                 if (accounts.isEmpty)
-                  const EmptyView(message: 'No savings accounts yet', icon: Icons.savings_outlined)
+                  const EmptyView(message: 'No savings accounts yet.\nTap + to create one.', icon: Icons.savings_outlined)
                 else
                   ...accounts.map((a) {
                     final acc = a as Map<String, dynamic>;
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                          child: const Icon(Icons.savings, color: AppTheme.primary),
-                        ),
-                        title: Text(acc['name']?.toString() ?? ''),
-                        subtitle: Text(acc['type']?.toString().replaceAll('_', ' ') ?? ''),
-                        trailing: Text(MoneyFormatter.format(acc['balance']), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    return AppListTile(
+                      leadingIcon: Icons.savings_rounded,
+                      leadingColor: AppTheme.success,
+                      title: acc['name']?.toString() ?? '',
+                      subtitle: acc['type']?.toString().replaceAll('_', ' ') ?? '',
+                      trailing: Text(
+                        MoneyFormatter.format(acc['balance']),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppTheme.primary),
                       ),
                     );
                   }),

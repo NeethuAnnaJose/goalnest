@@ -1,7 +1,15 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-// Use same-origin /api/v1 in dev (proxied to the Nest backend by next.config rewrites)
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
+// Use same-origin /api/v1 in dev (proxied to the Nest backend by next.config rewrites).
+// In production, set NEXT_PUBLIC_API_URL to the backend public URL (with or without /api/v1).
+function resolveApiUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_API_URL ?? '/api/v1';
+  if (raw.startsWith('/')) return raw;
+  const base = raw.replace(/\/$/, '');
+  return base.endsWith('/api/v1') ? base : `${base}/api/v1`;
+}
+
+const API_URL = resolveApiUrl();
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -47,7 +55,7 @@ export function getErrorMessage(error: unknown): string {
       return 'Cannot reach the API. Start the backend (npm run start:dev in the backend folder) and ensure PostgreSQL is running.';
     }
     if (error.response.status === 404) {
-      return 'API not found. Use the site at http://localhost:3000 (not 3001) and ensure the backend is running on port 3001.';
+      return `API not found (${API_URL}). Check NEXT_PUBLIC_API_URL on the web service and redeploy.`;
     }
     if (error.response.status === 500) {
       const msg = error.response?.data as { message?: string | string[] };

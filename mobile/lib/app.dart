@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/providers/auth_provider.dart';
-import 'features/auth/screens/login_screen.dart';
+import 'features/landing/screens/landing_screen.dart';
 import 'shared/screens/home_shell.dart';
 import 'shared/widgets/loading_view.dart';
 
@@ -21,7 +21,7 @@ class GoalNestApp extends ConsumerWidget {
           ? const Scaffold(body: LoadingView(message: 'Loading...'))
           : auth.isAuthenticated
               ? const HomeShell()
-              : const LoginScreen(),
+              : const LandingScreen(),
     );
   }
 }

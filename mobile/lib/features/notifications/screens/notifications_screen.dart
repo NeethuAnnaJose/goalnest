@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/core_providers.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/money_formatter.dart';
+import '../../../shared/widgets/app_decorations.dart';
 import '../../../shared/widgets/empty_view.dart';
 import '../../../shared/widgets/loading_view.dart';
 import '../providers/notifications_provider.dart';
@@ -15,79 +16,168 @@ class NotificationsScreen extends ConsumerWidget {
     final notificationsAsync = ref.watch(notificationsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              await ref.read(apiServiceProvider).markAllNotificationsRead();
-              ref.invalidate(notificationsProvider);
-              ref.invalidate(unreadCountProvider);
-            },
-            child: const Text('Mark all read'),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFECFDF5), AppTheme.surface],
+            stops: [0.0, 0.25],
           ),
-        ],
-      ),
-      body: notificationsAsync.when(
-        loading: () => const LoadingView(),
-        error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(notificationsProvider)),
-        data: (notifications) {
-          if (notifications.isEmpty) {
-            return const EmptyView(message: 'No notifications yet', icon: Icons.notifications_none);
-          }
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(notificationsProvider);
-              ref.invalidate(unreadCountProvider);
-            },
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: notifications.length,
-              itemBuilder: (_, i) {
-                final n = notifications[i] as Map<String, dynamic>;
-                final isRead = n['isRead'] == true;
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  color: isRead ? null : AppTheme.primary.withValues(alpha: 0.05),
-                  child: ListTile(
-                    leading: Icon(
-                      _iconForType(n['type']?.toString() ?? ''),
-                      color: isRead ? Colors.grey : AppTheme.primary,
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardBg,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: AppTheme.border),
+                        ),
+                        child: const Icon(Icons.arrow_back_rounded, size: 20),
+                      ),
                     ),
-                    title: Text(n['title']?.toString() ?? '', style: TextStyle(fontWeight: isRead ? FontWeight.normal : FontWeight.bold)),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(n['body']?.toString() ?? ''),
-                        const SizedBox(height: 4),
-                        Text(MoneyFormatter.formatDate(n['createdAt']?.toString() ?? ''), style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
-                      ],
-                    ),
-                    onTap: () async {
-                      if (!isRead) {
-                        await ref.read(apiServiceProvider).markNotificationRead(n['id'].toString());
+                    Text('Notifications', style: Theme.of(context).textTheme.titleLarge),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () async {
+                        await ref.read(apiServiceProvider).markAllNotificationsRead();
                         ref.invalidate(notificationsProvider);
                         ref.invalidate(unreadCountProvider);
-                      }
-                    },
-                  ),
-                );
-              },
-            ),
-          );
-        },
+                      },
+                      child: const Text('Mark all read'),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: notificationsAsync.when(
+                  loading: () => const LoadingView(),
+                  error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(notificationsProvider)),
+                  data: (notifications) {
+                    if (notifications.isEmpty) {
+                      return const EmptyView(message: 'No notifications yet', icon: Icons.notifications_none_rounded);
+                    }
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        ref.invalidate(notificationsProvider);
+                        ref.invalidate(unreadCountProvider);
+                      },
+                      color: AppTheme.primary,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                        itemCount: notifications.length,
+                        itemBuilder: (_, i) {
+                          final n = notifications[i] as Map<String, dynamic>;
+                          final isRead = n['isRead'] == true;
+                          final type = n['type']?.toString() ?? '';
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            decoration: AppDecorations.card(
+                              color: isRead ? AppTheme.cardBg : AppTheme.primaryMuted.withValues(alpha: 0.35),
+                              elevated: !isRead,
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                                onTap: () async {
+                                  if (!isRead) {
+                                    await ref.read(apiServiceProvider).markNotificationRead(n['id'].toString());
+                                    ref.invalidate(notificationsProvider);
+                                    ref.invalidate(unreadCountProvider);
+                                  }
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: AppDecorations.iconBadge(
+                                          isRead ? AppTheme.textMuted : AppTheme.primary,
+                                        ),
+                                        child: Icon(
+                                          _iconForType(type),
+                                          color: isRead ? AppTheme.textMuted : AppTheme.primary,
+                                          size: 22,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              n['title']?.toString() ?? '',
+                                              style: TextStyle(
+                                                fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              n['body']?.toString() ?? '',
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                color: AppTheme.textSecondary,
+                                                height: 1.4,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              MoneyFormatter.formatDate(n['createdAt']?.toString() ?? ''),
+                                              style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      if (!isRead)
+                                        Container(
+                                          width: 8,
+                                          height: 8,
+                                          margin: const EdgeInsets.only(top: 6),
+                                          decoration: const BoxDecoration(
+                                            color: AppTheme.primary,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
   IconData _iconForType(String type) {
     switch (type) {
-      case 'EMI_REMINDER': return Icons.payments;
-      case 'GOAL_PROGRESS': return Icons.flag;
-      case 'OVERSPENDING': return Icons.warning_amber;
-      case 'SAVINGS_MILESTONE': return Icons.savings;
-      case 'REPORT': return Icons.description;
-      default: return Icons.notifications;
+      case 'EMI_REMINDER': return Icons.payments_rounded;
+      case 'GOAL_PROGRESS': return Icons.flag_rounded;
+      case 'OVERSPENDING': return Icons.warning_amber_rounded;
+      case 'SAVINGS_MILESTONE': return Icons.savings_rounded;
+      case 'REPORT': return Icons.description_rounded;
+      default: return Icons.notifications_rounded;
     }
   }
 }

@@ -8,36 +8,52 @@ class HealthScoreRing extends StatelessWidget {
   final int score;
   final String grade;
 
+  Color get _color {
+    if (score >= 80) return AppTheme.success;
+    if (score >= 60) return AppTheme.warning;
+    return AppTheme.danger;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final color = score >= 80
-        ? AppTheme.primaryLight
-        : score >= 60
-            ? Colors.amber
-            : Colors.red.shade400;
-
     return SizedBox(
-      height: 140,
-      width: 140,
+      height: 130,
+      width: 130,
       child: Stack(
         alignment: Alignment.center,
         children: [
+          Container(
+            width: 130,
+            height: 130,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: _color.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+          ),
           PieChart(
             PieChartData(
-              sectionsSpace: 0,
-              centerSpaceRadius: 50,
+              sectionsSpace: 2,
+              centerSpaceRadius: 48,
               startDegreeOffset: -90,
               sections: [
                 PieChartSectionData(
                   value: score.toDouble(),
-                  color: color,
-                  radius: 14,
+                  gradient: LinearGradient(
+                    colors: [_color, _color.withValues(alpha: 0.7)],
+                  ),
+                  radius: 16,
                   showTitle: false,
                 ),
                 PieChartSectionData(
                   value: (100 - score).toDouble(),
-                  color: Colors.grey.shade200,
-                  radius: 14,
+                  color: AppTheme.surfaceVariant,
+                  radius: 16,
                   showTitle: false,
                 ),
               ],
@@ -46,8 +62,30 @@ class HealthScoreRing extends StatelessWidget {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('$score', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              Text('Grade $grade', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+              Text(
+                '$score',
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                  letterSpacing: -1,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Grade $grade',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: _color,
+                  ),
+                ),
+              ),
             ],
           ),
         ],
