@@ -21,7 +21,7 @@ class GoalNestApp extends ConsumerWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeMode == AppThemeMode.dark ? ThemeMode.dark : ThemeMode.light,
-      home: auth.isLoading
+      home: auth.isInitializing
           ? const Scaffold(body: LoadingView(message: 'Loading...'))
           : auth.isAuthenticated
               ? const HomeShell()

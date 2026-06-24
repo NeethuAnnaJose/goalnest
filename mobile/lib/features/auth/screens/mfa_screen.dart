@@ -26,11 +26,9 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
     final success = await ref.read(authProvider.notifier).verifyMfa(_codeController.text);
     if (!mounted) return;
     if (success) {
-      Navigator.of(context).popUntil((route) => route.isFirst);
+      // Navigation handled by ref.listen when auth state updates
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid MFA code'), backgroundColor: AppTheme.danger),
-      );
+      // Error shown via ref.listen
     }
   }
 
@@ -38,6 +36,22 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
     final colors = context.appColors;
+
+    ref.listen<AuthState>(authProvider, (prev, next) {
+      if (next.error != null && next.error != prev?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: AppTheme.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        ref.read(authProvider.notifier).clearError();
+      }
+      if (next.isAuthenticated && prev?.isAuthenticated != true) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    });
 
     return AuthLayout(
       title: 'Two-factor authentication',
@@ -63,8 +77,8 @@ class _MfaScreenState extends ConsumerState<MfaScreen> {
           ),
           const SizedBox(height: 24),
           FilledButton(
-            onPressed: auth.isLoading ? null : _verify,
-            child: auth.isLoading
+            onPressed: auth.isSubmitting ? null : _verify,
+            child: auth.isSubmitting
                 ? const SizedBox(
                     height: 22,
                     width: 22,

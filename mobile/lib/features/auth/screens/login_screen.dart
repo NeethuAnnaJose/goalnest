@@ -35,16 +35,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!mounted) return;
     if (!success && ref.read(authProvider).mfaTempToken != null) {
       Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MfaScreen()));
-    } else if (!success && ref.read(authProvider).error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ref.read(authProvider).error!), backgroundColor: AppTheme.danger),
-      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+
+    ref.listen<AuthState>(authProvider, (prev, next) {
+      if (next.error != null && next.error != prev?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: AppTheme.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        ref.read(authProvider.notifier).clearError();
+      }
+      if (next.isAuthenticated && prev?.isAuthenticated != true) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    });
 
     return AuthLayout(
       title: 'Welcome back',
@@ -75,8 +87,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             const SizedBox(height: 24),
             FilledButton(
-              onPressed: auth.isLoading ? null : _login,
-              child: auth.isLoading
+              onPressed: auth.isSubmitting ? null : _login,
+              child: auth.isSubmitting
                   ? const SizedBox(
                       height: 22,
                       width: 22,

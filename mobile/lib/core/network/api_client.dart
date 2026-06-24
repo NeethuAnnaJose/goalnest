@@ -78,6 +78,12 @@ class ApiClient {
   }
 
   String getErrorMessage(DioException e) {
+    if (e.type == DioExceptionType.connectionError ||
+        e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.sendTimeout ||
+        e.type == DioExceptionType.receiveTimeout) {
+      return 'Cannot reach the server (${ApiConstants.baseUrl}). Check your connection.';
+    }
     final data = e.response?.data;
     if (data is Map && data['message'] != null) {
       final msg = data['message'];

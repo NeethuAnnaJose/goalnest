@@ -34,18 +34,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
     if (!mounted) return;
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(ref.read(authProvider).error ?? 'Registration failed'),
-          backgroundColor: AppTheme.danger,
-        ),
-      );
+      // Error shown via ref.listen
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
+
+    ref.listen<AuthState>(authProvider, (prev, next) {
+      if (next.error != null && next.error != prev?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: AppTheme.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        ref.read(authProvider.notifier).clearError();
+      }
+      if (next.isAuthenticated && prev?.isAuthenticated != true) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+    });
 
     return AuthLayout(
       title: 'Create your account',
@@ -78,8 +89,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             const SizedBox(height: 24),
             FilledButton(
-              onPressed: auth.isLoading ? null : _register,
-              child: auth.isLoading
+              onPressed: auth.isSubmitting ? null : _register,
+              child: auth.isSubmitting
                   ? const SizedBox(
                       height: 22,
                       width: 22,

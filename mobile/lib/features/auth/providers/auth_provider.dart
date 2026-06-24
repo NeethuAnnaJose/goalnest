@@ -5,21 +5,26 @@ import '../../../core/providers/core_providers.dart';
 class AuthState {
   const AuthState({
     this.isAuthenticated = false,
-    this.isLoading = true,
+    this.isInitializing = true,
+    this.isSubmitting = false,
     this.user,
     this.mfaTempToken,
     this.error,
   });
 
   final bool isAuthenticated;
-  final bool isLoading;
+  /// App startup token check only — do not use for login button loading.
+  final bool isInitializing;
+  /// Login / register / MFA in progress.
+  final bool isSubmitting;
   final Map<String, dynamic>? user;
   final String? mfaTempToken;
   final String? error;
 
   AuthState copyWith({
     bool? isAuthenticated,
-    bool? isLoading,
+    bool? isInitializing,
+    bool? isSubmitting,
     Map<String, dynamic>? user,
     String? mfaTempToken,
     String? error,
@@ -28,7 +33,8 @@ class AuthState {
   }) {
     return AuthState(
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-      isLoading: isLoading ?? this.isLoading,
+      isInitializing: isInitializing ?? this.isInitializing,
+      isSubmitting: isSubmitting ?? this.isSubmitting,
       user: user ?? this.user,
       mfaTempToken: clearMfa ? null : (mfaTempToken ?? this.mfaTempToken),
       error: clearError ? null : (error ?? this.error),
@@ -49,17 +55,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (hasToken) {
       try {
         final profile = await _ref.read(apiServiceProvider).getProfile();
-        state = AuthState(isAuthenticated: true, isLoading: false, user: profile);
+        state = AuthState(isAuthenticated: true, isInitializing: false, user: profile);
         return;
       } catch (_) {
         await client.clearTokens();
       }
     }
-    state = const AuthState(isLoading: false);
+    state = const AuthState(isInitializing: false);
   }
 
   Future<bool> login(String email, String password) async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(isSubmitting: true, clearError: true);
     try {
       final api = _ref.read(apiServiceProvider);
       final client = _ref.read(apiClientProvider);
@@ -67,10 +73,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       if (result['mfaRequired'] == true) {
         state = AuthState(
-          isLoading: false,
+          isInitializing: false,
+          isSubmitting: false,
           mfaTempToken: result['tempToken'] as String?,
         );
-        return false; // needs MFA
+        return false;
       }
 
       await client.saveTokens(
@@ -78,13 +85,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
         result['refreshToken'] as String,
       );
       final profile = await api.getProfile();
-      state = AuthState(isAuthenticated: true, isLoading: false, user: profile);
+      state = AuthState(isAuthenticated: true, isInitializing: false, user: profile);
       return true;
     } on DioException catch (e) {
-      state = state.copyWith(isLoading: false, error: _ref.read(apiClientProvider).getErrorMessage(e));
+      state = state.copyWith(
+        isSubmitting: false,
+        error: _ref.read(apiClientProvider).getErrorMessage(e),
+      );
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isSubmitting: false, error: e.toString());
       return false;
     }
   }
@@ -92,7 +102,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> verifyMfa(String code) async {
     final tempToken = state.mfaTempToken;
     if (tempToken == null) return false;
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(isSubmitting: true, clearError: true);
     try {
       final api = _ref.read(apiServiceProvider);
       final client = _ref.read(apiClientProvider);
@@ -102,19 +112,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
         result['refreshToken'] as String,
       );
       final profile = await api.getProfile();
-      state = AuthState(isAuthenticated: true, isLoading: false, user: profile);
+      state = AuthState(isAuthenticated: true, isInitializing: false, user: profile);
       return true;
     } on DioException catch (e) {
-      state = state.copyWith(isLoading: false, error: _ref.read(apiClientProvider).getErrorMessage(e));
+      state = state.copyWith(
+        isSubmitting: false,
+        error: _ref.read(apiClientProvider).getErrorMessage(e),
+      );
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isSubmitting: false, error: e.toString());
       return false;
     }
   }
 
   Future<bool> register(String email, String password, String name) async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = state.copyWith(isSubmitting: true, clearError: true);
     try {
       final api = _ref.read(apiServiceProvider);
       final client = _ref.read(apiClientProvider);
@@ -124,20 +137,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
         result['refreshToken'] as String,
       );
       final profile = await api.getProfile();
-      state = AuthState(isAuthenticated: true, isLoading: false, user: profile);
+      state = AuthState(isAuthenticated: true, isInitializing: false, user: profile);
       return true;
     } on DioException catch (e) {
-      state = state.copyWith(isLoading: false, error: _ref.read(apiClientProvider).getErrorMessage(e));
+      state = state.copyWith(
+        isSubmitting: false,
+        error: _ref.read(apiClientProvider).getErrorMessage(e),
+      );
       return false;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isSubmitting: false, error: e.toString());
       return false;
     }
   }
 
   Future<void> logout() async {
     await _ref.read(apiClientProvider).clearTokens();
-    state = const AuthState(isLoading: false);
+    state = const AuthState(isInitializing: false);
+  }
+
+  void clearError() {
+    state = state.copyWith(clearError: true);
   }
 }
 
