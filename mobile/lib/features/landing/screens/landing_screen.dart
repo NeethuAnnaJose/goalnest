@@ -1,8 +1,11 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import '../../../core/constants/billing_config.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/app_decorations.dart';
 import '../../../shared/widgets/goalnest_logo.dart';
+import '../../../shared/widgets/theme_toggle_button.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../auth/screens/register_screen.dart';
 
@@ -10,12 +13,12 @@ class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
 
   static const _features = [
-    _Feature(Icons.bar_chart_rounded, 'Dashboard', 'Income, expenses, savings, and safe-to-spend in one place.', Color(0xFF10B981), Color(0xFFD1FAE5)),
-    _Feature(Icons.flag_rounded, 'Goals', 'Set goals and use planners for house, car, wedding, and more.', Color(0xFF7C3AED), Color(0xFFEDE9FE)),
-    _Feature(Icons.shopping_cart_rounded, 'Affordability', 'Check if a purchase fits your budget before you buy.', Color(0xFFE11D48), Color(0xFFFFE4E6)),
-    _Feature(Icons.savings_rounded, 'Savings', 'Track bank accounts, FDs, mutual funds, and cash.', Color(0xFF0EA5E9), Color(0xFFE0F2FE)),
-    _Feature(Icons.account_balance_rounded, 'Loans', 'Track loans, EMIs, and upcoming payments.', Color(0xFFF59E0B), Color(0xFFFEF3C7)),
-    _Feature(Icons.description_rounded, 'Reports', 'Generate and download financial reports.', Color(0xFF64748B), Color(0xFFF1F5F9)),
+    _Feature(Icons.bar_chart_rounded, 'Dashboard', 'Income, expenses, savings, and safe-to-spend in one place.', Color(0xFF10B981), Color(0x3310B981)),
+    _Feature(Icons.flag_rounded, 'Goals', 'Set goals and use planners for house, car, wedding, and more.', Color(0xFF7C3AED), Color(0x337C3AED)),
+    _Feature(Icons.shopping_cart_rounded, 'Affordability', 'Check if a purchase fits your budget before you buy.', Color(0xFFE11D48), Color(0x33E11D48)),
+    _Feature(Icons.savings_rounded, 'Savings', 'Track bank accounts, FDs, mutual funds, and cash.', Color(0xFF0EA5E9), Color(0x330EA5E9)),
+    _Feature(Icons.account_balance_rounded, 'Loans', 'Track loans, EMIs, and upcoming payments.', Color(0xFFF59E0B), Color(0x33F59E0B)),
+    _Feature(Icons.description_rounded, 'Reports', 'Generate and download financial reports.', Color(0xFF64748B), Color(0x3364748B)),
   ];
 
   static const _highlights = [
@@ -32,6 +35,45 @@ class LandingScreen extends StatelessWidget {
     'Budget alerts and money notes',
   ];
 
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final isDark = context.isDark;
+
+    return Scaffold(
+      backgroundColor: colors.background,
+      body: CustomScrollView(
+        slivers: [
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _StickyNavDelegate(
+              child: _LandingNav(
+                onLogin: () => _openLogin(context),
+                onRegister: () => _openRegister(context),
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: _HeroSection(
+              onLogin: () => _openLogin(context),
+              onRegister: () => _openRegister(context),
+              isDark: isDark,
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          SliverToBoxAdapter(child: _FeaturesSection(features: _features)),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          SliverToBoxAdapter(child: _WhySection(highlights: _highlights)),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          SliverToBoxAdapter(child: _LaunchSection(onRegister: () => _openRegister(context), perks: _launchPerks)),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          SliverToBoxAdapter(child: _CtaSection(onRegister: () => _openRegister(context))),
+          SliverToBoxAdapter(child: _LandingFooter()),
+        ],
+      ),
+    );
+  }
+
   void _openLogin(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
   }
@@ -39,39 +81,38 @@ class LandingScreen extends StatelessWidget {
   void _openRegister(BuildContext context) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen()));
   }
+}
+
+class _StickyNavDelegate extends SliverPersistentHeaderDelegate {
+  _StickyNavDelegate({required this.child});
+
+  final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFECFDF5), AppTheme.surface, AppTheme.surface],
-            stops: [0.0, 0.2, 1.0],
+  double get minExtent => 64;
+
+  @override
+  double get maxExtent => 64;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final colors = context.appColors;
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colors.background.withValues(alpha: 0.85),
+            border: Border(bottom: BorderSide(color: colors.border.withValues(alpha: 0.6))),
           ),
-        ),
-        child: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(child: _LandingNav(onLogin: () => _openLogin(context), onRegister: () => _openRegister(context))),
-              SliverToBoxAdapter(child: _HeroSection(onLogin: () => _openLogin(context), onRegister: () => _openRegister(context))),
-              const SliverToBoxAdapter(child: SizedBox(height: 32)),
-              SliverToBoxAdapter(child: _FeaturesSection(features: _features)),
-              const SliverToBoxAdapter(child: SizedBox(height: 32)),
-              SliverToBoxAdapter(child: _WhySection(highlights: _highlights)),
-              const SliverToBoxAdapter(child: SizedBox(height: 32)),
-              SliverToBoxAdapter(child: _LaunchSection(onRegister: () => _openRegister(context), perks: _launchPerks)),
-              const SliverToBoxAdapter(child: SizedBox(height: 32)),
-              SliverToBoxAdapter(child: _CtaSection(onRegister: () => _openRegister(context))),
-              const SliverToBoxAdapter(child: _LandingFooter()),
-            ],
-          ),
+          child: child,
         ),
       ),
     );
   }
+
+  @override
+  bool shouldRebuild(covariant _StickyNavDelegate oldDelegate) => false;
 }
 
 class _LandingNav extends StatelessWidget {
@@ -83,11 +124,13 @@ class _LandingNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
           const GoalNestLogo(size: GoalNestLogoSize.md),
           const Spacer(),
+          const ThemeToggleButton(compact: true),
+          const SizedBox(width: 8),
           TextButton(onPressed: onLogin, child: const Text('Sign in')),
           const SizedBox(width: 4),
           FilledButton(
@@ -106,13 +149,20 @@ class _LandingNav extends StatelessWidget {
 }
 
 class _HeroSection extends StatelessWidget {
-  const _HeroSection({required this.onLogin, required this.onRegister});
+  const _HeroSection({required this.onLogin, required this.onRegister, required this.isDark});
 
   final VoidCallback onLogin;
   final VoidCallback onRegister;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final scheme = Theme.of(context).colorScheme;
+    final gradientColors = isDark
+        ? [const Color(0x66022422), colors.background, colors.background]
+        : [const Color(0xE6ECFDF5), colors.background, colors.background];
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -120,11 +170,11 @@ class _HeroSection extends StatelessWidget {
           right: -60,
           top: -20,
           child: Container(
-            width: 200,
-            height: 200,
+            width: 220,
+            height: 220,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppTheme.primary.withValues(alpha: 0.08),
+              color: scheme.primary.withValues(alpha: 0.08),
             ),
           ),
         ),
@@ -132,15 +182,23 @@ class _HeroSection extends StatelessWidget {
           left: -40,
           bottom: 40,
           child: Container(
-            width: 140,
-            height: 140,
+            width: 150,
+            height: 150,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppTheme.accent.withValues(alpha: 0.08),
             ),
           ),
         ),
-        Padding(
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: gradientColors,
+            ),
+          ),
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
           child: Column(
             children: [
@@ -148,20 +206,13 @@ class _HeroSection extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    gradient: AppTheme.primaryGradient,
+                    color: isDark ? scheme.primary.withValues(alpha: 0.2) : const Color(0xFF059669),
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primary.withValues(alpha: 0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
                   ),
                   child: Text(
                     BillingConfig.launchBadge!,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: isDark ? scheme.primary : Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -180,8 +231,10 @@ class _HeroSection extends StatelessWidget {
                     ),
               ),
               ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [Color(0xFF047857), Color(0xFF0D9488), Color(0xFF10B981)],
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: isDark
+                      ? [const Color(0xFF34D399), const Color(0xFF2DD4BF), const Color(0xFF6EE7B7)]
+                      : [const Color(0xFF047857), const Color(0xFF0D9488), const Color(0xFF10B981)],
                 ).createShader(bounds),
                 child: Text(
                   'without the spreadsheet',
@@ -196,14 +249,10 @@ class _HeroSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Salary, rent, EMIs, savings. See what\'s left at the end of the month. Built for how people actually manage money in India.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 16,
-                  height: 1.5,
-                ),
+                style: TextStyle(color: colors.mutedForeground, fontSize: 16, height: 1.5),
               ),
               const SizedBox(height: 28),
               SizedBox(
@@ -212,9 +261,7 @@ class _HeroSection extends StatelessWidget {
                   onPressed: onRegister,
                   icon: const Icon(Icons.arrow_forward_rounded, size: 18),
                   label: Text(BillingConfig.enabled ? 'Get started' : 'Start free, no card needed'),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
+                  style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
                 ),
               ),
               const SizedBox(height: 10),
@@ -222,10 +269,7 @@ class _HeroSection extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton(
                   onPressed: onLogin,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(color: AppTheme.border),
-                  ),
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
                   child: const Text('I already have an account'),
                 ),
               ),
@@ -234,8 +278,8 @@ class _HeroSection extends StatelessWidget {
                 Text(
                   BillingConfig.trialMessage,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: AppTheme.primary,
+                  style: TextStyle(
+                    color: isDark ? scheme.primary : const Color(0xFF047857),
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -273,24 +317,30 @@ class _QuickChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final scheme = Theme.of(context).colorScheme;
+
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-        decoration: AppDecorations.card(elevated: false),
+        decoration: BoxDecoration(
+          color: colors.card.withValues(alpha: 0.7),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.border),
+        ),
         child: Column(
           children: [
             Container(
               width: 36,
               height: 36,
-              decoration: AppDecorations.iconBadge(AppTheme.primary),
-              child: Icon(icon, size: 18, color: AppTheme.primary),
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 18, color: scheme.primary),
             ),
             const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-            ),
+            Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
@@ -305,14 +355,16 @@ class _FeaturesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 32),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceVariant.withValues(alpha: 0.5),
+        color: colors.featureSectionBg,
         border: Border(
-          top: BorderSide(color: AppTheme.border.withValues(alpha: 0.8)),
-          bottom: BorderSide(color: AppTheme.border.withValues(alpha: 0.8)),
+          top: BorderSide(color: colors.border.withValues(alpha: 0.8)),
+          bottom: BorderSide(color: colors.border.withValues(alpha: 0.8)),
         ),
       ),
       child: Padding(
@@ -321,16 +373,12 @@ class _FeaturesSection extends StatelessWidget {
           children: [
             const _SectionLabel('Features'),
             const SizedBox(height: 8),
-            Text(
-              'All your finances in one app',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text('All your finances in one app', textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Simple tools for tracking, planning, and reporting.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.textSecondary, height: 1.4),
+              style: TextStyle(color: colors.mutedForeground, height: 1.4),
             ),
             const SizedBox(height: 24),
             ...List.generate((features.length / 2).ceil(), (row) {
@@ -362,9 +410,16 @@ class _FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: AppDecorations.card(),
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: colors.border),
+        boxShadow: AppTheme.cardShadowFor(context),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -377,15 +432,9 @@ class _FeatureCard extends StatelessWidget {
             child: Icon(feature.icon, color: feature.color, size: 22),
           ),
           const SizedBox(height: 12),
-          Text(
-            feature.title,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-          ),
+          Text(feature.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
           const SizedBox(height: 6),
-          Text(
-            feature.desc,
-            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
-          ),
+          Text(feature.desc, style: TextStyle(fontSize: 12, color: context.appColors.mutedForeground, height: 1.4)),
         ],
       ),
     );
@@ -399,6 +448,9 @@ class _WhySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final scheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -406,14 +458,11 @@ class _WhySection extends StatelessWidget {
         children: [
           const _SectionLabel('Why GoalNest'),
           const SizedBox(height: 8),
-          Text(
-            'Built for Indian salaries and EMIs',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('Built for Indian salaries and EMIs', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Most apps only show what you spent last month. GoalNest shows what you can spend this month, after rent, bills, and loan payments are accounted for.',
-            style: TextStyle(color: AppTheme.textSecondary, height: 1.5),
+            style: TextStyle(color: colors.mutedForeground, height: 1.5),
           ),
           const SizedBox(height: 20),
           ...highlights.map(
@@ -425,16 +474,14 @@ class _WhySection extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      color: scheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.15)),
+                      border: Border.all(color: scheme.primary.withValues(alpha: 0.15)),
                     ),
-                    child: const Icon(Icons.check_rounded, size: 16, color: AppTheme.primary),
+                    child: Icon(Icons.check_rounded, size: 16, color: scheme.primary),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(item, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-                  ),
+                  Expanded(child: Text(item, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14))),
                 ],
               ),
             ),
@@ -442,27 +489,27 @@ class _WhySection extends StatelessWidget {
           const SizedBox(height: 20),
           Container(
             width: double.infinity,
-            decoration: AppDecorations.card(),
+            decoration: BoxDecoration(
+              color: colors.card,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              border: Border.all(color: colors.border),
+              boxShadow: AppTheme.cardShadowFor(context),
+            ),
             clipBehavior: Clip.antiAlias,
             child: IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(width: 4, color: AppTheme.primary),
+                  Container(width: 4, color: scheme.primary),
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.all(22),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            AppTheme.primary.withValues(alpha: 0.06),
-                            AppTheme.cardBg,
-                          ],
+                          colors: [scheme.primary.withValues(alpha: 0.06), colors.card],
                         ),
                       ),
-                      child: const Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
@@ -471,22 +518,18 @@ class _WhySection extends StatelessWidget {
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.2,
-                              color: AppTheme.primary,
+                              color: scheme.primary,
                             ),
                           ),
-                          SizedBox(height: 12),
+                          const SizedBox(height: 12),
                           Text(
                             '₹24,500 left this month after rent, groceries, and your car EMI.',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              height: 1.35,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          SizedBox(height: 12),
+                          const SizedBox(height: 12),
                           Text(
                             'That number updates as you log expenses, so you\'re not guessing on payday.',
-                            style: TextStyle(color: AppTheme.textSecondary, height: 1.45, fontSize: 14),
+                            style: TextStyle(color: colors.mutedForeground, height: 1.45, fontSize: 14),
                           ),
                         ],
                       ),
@@ -512,19 +555,21 @@ class _LaunchSection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (BillingConfig.enabled) return const SizedBox.shrink();
 
+    final colors = context.appColors;
+    final scheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFECFDF5), Color(0xFFF0FDFA)],
+            colors: [colors.launchCardStart, colors.launchCardEnd],
           ),
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          border: Border.all(color: AppTheme.primaryLight.withValues(alpha: 0.4), width: 1.5),
-          boxShadow: AppTheme.softShadow,
+          border: Border.all(color: colors.launchBorder, width: 1.5),
         ),
         child: Column(
           children: [
@@ -532,29 +577,23 @@ class _LaunchSection extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.12),
+                color: scheme.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.2)),
+                border: Border.all(color: scheme.primary.withValues(alpha: 0.2)),
               ),
-              child: const Icon(Icons.card_giftcard_rounded, color: AppTheme.primary, size: 28),
+              child: Icon(Icons.card_giftcard_rounded, color: scheme.primary, size: 28),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Free while we launch',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text('Free while we launch', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
             Text.rich(
               TextSpan(
-                style: const TextStyle(color: AppTheme.textSecondary, height: 1.5, fontSize: 15),
+                style: TextStyle(color: colors.mutedForeground, height: 1.5, fontSize: 15),
                 children: [
                   const TextSpan(text: 'Payments are not live yet. Enjoy '),
                   TextSpan(
                     text: 'full Premium access',
-                    style: TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w700),
                   ),
                   TextSpan(text: ' for ${BillingConfig.freeTrialDays} days with no credit card.'),
                 ],
@@ -567,7 +606,7 @@ class _LaunchSection extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_rounded, size: 18, color: AppTheme.primary),
+                    Icon(Icons.check_circle_rounded, size: 18, color: scheme.primary),
                     const SizedBox(width: 10),
                     Expanded(child: Text(perk, style: const TextStyle(fontSize: 14))),
                   ],
@@ -584,10 +623,10 @@ class _LaunchSection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'We will announce pricing before anything is charged.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
+              style: TextStyle(fontSize: 11, color: colors.mutedForeground),
             ),
           ],
         ),
@@ -603,20 +642,18 @@ class _CtaSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          Text(
-            'Ready to get started?',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('Ready to get started?', textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Set up takes a few minutes. Add your salary, log a couple of expenses, and you\'re good to go.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppTheme.textSecondary, fontSize: 15, height: 1.45),
+            style: TextStyle(color: colors.mutedForeground, fontSize: 15, height: 1.45),
           ),
           const SizedBox(height: 24),
           SizedBox(
@@ -637,22 +674,24 @@ class _CtaSection extends StatelessWidget {
 class _LandingFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 32),
       padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceVariant.withValues(alpha: 0.4),
-        border: Border(top: BorderSide(color: AppTheme.border.withValues(alpha: 0.8))),
+        color: colors.footerBg,
+        border: Border(top: BorderSide(color: colors.border.withValues(alpha: 0.8))),
       ),
       child: Column(
         children: [
           const GoalNestLogo(size: GoalNestLogoSize.sm),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             '© 2026 GoalNest · Personal finance for India',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
+            style: TextStyle(fontSize: 12, color: colors.mutedForeground),
           ),
         ],
       ),
@@ -670,11 +709,11 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       text.toUpperCase(),
       textAlign: TextAlign.center,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w700,
         letterSpacing: 1.4,
-        color: AppTheme.primary,
+        color: Theme.of(context).colorScheme.primary,
       ),
     );
   }

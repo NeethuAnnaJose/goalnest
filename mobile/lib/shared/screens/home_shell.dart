@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
@@ -11,6 +12,7 @@ import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/reports/screens/reports_screen.dart';
 import '../../features/savings/screens/savings_screen.dart';
 import '../widgets/app_decorations.dart';
+import '../widgets/theme_toggle_button.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
@@ -44,15 +46,17 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     final user = ref.watch(authProvider).user;
     final unreadAsync = ref.watch(unreadCountProvider);
     final firstName = user?['name']?.toString().split(' ').first;
+    final colors = context.appColors;
 
     return Scaffold(
+      backgroundColor: colors.background,
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFECFDF5), AppTheme.surface],
-            stops: [0.0, 0.35],
+            colors: [colors.heroTint, colors.background],
+            stops: const [0.0, 0.35],
           ),
         ),
         child: SafeArea(
@@ -70,7 +74,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                           Text(
                             _greeting(),
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppTheme.textSecondary,
+                                  color: colors.mutedForeground,
                                   fontWeight: FontWeight.w500,
                                 ),
                           ),
@@ -83,12 +87,14 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                             Text(
                               firstName,
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppTheme.textMuted,
+                                    color: colors.mutedForeground,
                                   ),
                             ),
                         ],
                       ),
                     ),
+                    const ThemeToggleButton(compact: true),
+                    const SizedBox(width: 4),
                     unreadAsync.when(
                       loading: () => _iconButton(
                         icon: Icons.notifications_outlined,
@@ -131,12 +137,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                       icon: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppTheme.cardBg,
+                          color: colors.card,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppTheme.border),
-                          boxShadow: AppTheme.softShadow,
+                          border: Border.all(color: colors.border),
+                          boxShadow: AppTheme.cardShadowFor(context),
                         ),
-                        child: const Icon(Icons.more_vert, size: 20, color: AppTheme.textSecondary),
+                        child: Icon(Icons.more_vert, size: 20, color: colors.mutedForeground),
                       ),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
                       onSelected: (v) {
@@ -176,8 +182,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppTheme.cardBg,
-          border: Border(top: BorderSide(color: AppTheme.border.withValues(alpha: 0.8))),
+          color: colors.card,
+          border: Border(top: BorderSide(color: colors.border.withValues(alpha: 0.8))),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.04),
@@ -228,6 +234,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   }
 
   Widget _iconButton({required IconData icon, required VoidCallback onPressed}) {
+    final colors = context.appColors;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -236,12 +243,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         child: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: AppTheme.cardBg,
+            color: colors.card,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppTheme.border),
-            boxShadow: AppTheme.softShadow,
+            border: Border.all(color: colors.border),
+            boxShadow: AppTheme.cardShadowFor(context),
           ),
-          child: Icon(icon, size: 22, color: AppTheme.textSecondary),
+          child: Icon(icon, size: 22, color: colors.mutedForeground),
         ),
       ),
     );
