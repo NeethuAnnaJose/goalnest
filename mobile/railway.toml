@@ -1,0 +1,7 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "mobile/Dockerfile"
+
+[deploy]
+startCommand = ""
+restartPolicyType = "on_failure"
