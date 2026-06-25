@@ -9,164 +9,135 @@ import '../../../shared/widgets/loading_view.dart';
 import '../providers/notifications_provider.dart';
 
 class NotificationsScreen extends ConsumerWidget {
-  const NotificationsScreen({super.key});
+  const NotificationsScreen({super.key, this.embedded = false});
+
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notificationsAsync = ref.watch(notificationsProvider);
 
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFECFDF5), AppTheme.surface],
-            stops: [0.0, 0.25],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardBg,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppTheme.border),
-                        ),
-                        child: const Icon(Icons.arrow_back_rounded, size: 20),
-                      ),
-                    ),
-                    Text('Notifications', style: Theme.of(context).textTheme.titleLarge),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () async {
-                        await ref.read(apiServiceProvider).markAllNotificationsRead();
-                        ref.invalidate(notificationsProvider);
-                        ref.invalidate(unreadCountProvider);
-                      },
-                      child: const Text('Mark all read'),
-                    ),
-                  ],
+    final list = notificationsAsync.when(
+      loading: () => const LoadingView(),
+      error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(notificationsProvider)),
+      data: (notifications) {
+        if (notifications.isEmpty) {
+          return const EmptyView(message: 'No notifications yet', icon: Icons.notifications_none_rounded);
+        }
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(notificationsProvider);
+            ref.invalidate(unreadCountProvider);
+          },
+          color: AppTheme.primary,
+          child: ListView.builder(
+            padding: EdgeInsets.fromLTRB(20, 12, 20, embedded ? 24 : 24),
+            itemCount: notifications.length,
+            itemBuilder: (_, i) {
+              final n = notifications[i] as Map<String, dynamic>;
+              final isRead = n['isRead'] == true;
+              final type = n['type']?.toString() ?? '';
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: AppDecorations.card(
+                  color: isRead ? AppTheme.cardBg : AppTheme.primaryMuted.withValues(alpha: 0.35),
+                  elevated: !isRead,
                 ),
-              ),
-              Expanded(
-                child: notificationsAsync.when(
-                  loading: () => const LoadingView(),
-                  error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(notificationsProvider)),
-                  data: (notifications) {
-                    if (notifications.isEmpty) {
-                      return const EmptyView(message: 'No notifications yet', icon: Icons.notifications_none_rounded);
-                    }
-                    return RefreshIndicator(
-                      onRefresh: () async {
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    onTap: () async {
+                      if (!isRead) {
+                        await ref.read(apiServiceProvider).markNotificationRead(n['id'].toString());
                         ref.invalidate(notificationsProvider);
                         ref.invalidate(unreadCountProvider);
-                      },
-                      color: AppTheme.primary,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-                        itemCount: notifications.length,
-                        itemBuilder: (_, i) {
-                          final n = notifications[i] as Map<String, dynamic>;
-                          final isRead = n['isRead'] == true;
-                          final type = n['type']?.toString() ?? '';
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            decoration: AppDecorations.card(
-                              color: isRead ? AppTheme.cardBg : AppTheme.primaryMuted.withValues(alpha: 0.35),
-                              elevated: !isRead,
+                      }
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: AppDecorations.iconBadge(isRead ? AppTheme.textMuted : AppTheme.primary),
+                            child: Icon(_iconForType(type), color: isRead ? AppTheme.textMuted : AppTheme.primary, size: 22),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(n['title']?.toString() ?? '', style: TextStyle(fontWeight: isRead ? FontWeight.w500 : FontWeight.w700, fontSize: 15)),
+                                const SizedBox(height: 4),
+                                Text(n['body']?.toString() ?? '', style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.4)),
+                                const SizedBox(height: 6),
+                                Text(MoneyFormatter.formatDate(n['createdAt']?.toString() ?? ''), style: const TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                              ],
                             ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                                onTap: () async {
-                                  if (!isRead) {
-                                    await ref.read(apiServiceProvider).markNotificationRead(n['id'].toString());
-                                    ref.invalidate(notificationsProvider);
-                                    ref.invalidate(unreadCountProvider);
-                                  }
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        width: 44,
-                                        height: 44,
-                                        decoration: AppDecorations.iconBadge(
-                                          isRead ? AppTheme.textMuted : AppTheme.primary,
-                                        ),
-                                        child: Icon(
-                                          _iconForType(type),
-                                          color: isRead ? AppTheme.textMuted : AppTheme.primary,
-                                          size: 22,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 14),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              n['title']?.toString() ?? '',
-                                              style: TextStyle(
-                                                fontWeight: isRead ? FontWeight.w500 : FontWeight.w700,
-                                                fontSize: 15,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              n['body']?.toString() ?? '',
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                color: AppTheme.textSecondary,
-                                                height: 1.4,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              MoneyFormatter.formatDate(n['createdAt']?.toString() ?? ''),
-                                              style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      if (!isRead)
-                                        Container(
-                                          width: 8,
-                                          height: 8,
-                                          margin: const EdgeInsets.only(top: 6),
-                                          decoration: const BoxDecoration(
-                                            color: AppTheme.primary,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 20, color: AppTheme.danger),
+                            onPressed: () async {
+                              await ref.read(apiServiceProvider).deleteNotification(n['id'].toString());
+                              ref.invalidate(notificationsProvider);
+                              ref.invalidate(unreadCountProvider);
+                            },
+                          ),
+                        ],
                       ),
-                    );
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+
+    if (embedded) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () async {
+                    await ref.read(apiServiceProvider).markAllNotificationsRead();
+                    ref.invalidate(notificationsProvider);
+                    ref.invalidate(unreadCountProvider);
                   },
+                  child: const Text('Mark all read'),
                 ),
               ),
-            ],
-          ),
+            ),
+            Expanded(child: list),
+          ],
         ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await ref.read(apiServiceProvider).markAllNotificationsRead();
+              ref.invalidate(notificationsProvider);
+              ref.invalidate(unreadCountProvider);
+            },
+            child: const Text('Mark all read'),
+          ),
+        ],
       ),
+      body: list,
     );
   }
 

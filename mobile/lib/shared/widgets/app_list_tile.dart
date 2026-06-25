@@ -11,6 +11,7 @@ class AppListTile extends StatelessWidget {
     this.leadingIcon,
     this.leadingColor,
     this.onTap,
+    this.onLongPress,
     this.highlightColor,
   });
 
@@ -20,6 +21,7 @@ class AppListTile extends StatelessWidget {
   final IconData? leadingIcon;
   final Color? leadingColor;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final Color? highlightColor;
 
   @override
@@ -32,6 +34,7 @@ class AppListTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
+          onLongPress: onLongPress,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           child: Ink(
             decoration: AppDecorations.card(

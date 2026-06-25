@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/navigation/app_nav.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
+import '../../features/admin/screens/admin_screen.dart';
+import '../../features/affordability/screens/affordability_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/expenses/screens/expenses_screen.dart';
 import '../../features/goals/screens/goals_screen.dart';
+import '../../features/income/screens/income_screen.dart';
 import '../../features/loans/screens/loans_screen.dart';
 import '../../features/notifications/providers/notifications_provider.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/reports/screens/reports_screen.dart';
 import '../../features/savings/screens/savings_screen.dart';
-import '../widgets/app_decorations.dart';
+import '../widgets/financial_year_selector.dart';
+import '../widgets/goalnest_logo.dart';
 import '../widgets/theme_toggle_button.dart';
+import '../widgets/trial_banner.dart';
 
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key});
@@ -22,17 +28,22 @@ class HomeShell extends ConsumerStatefulWidget {
 }
 
 class _HomeShellState extends ConsumerState<HomeShell> {
-  int _index = 0;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  AppRoute _route = AppRoute.dashboard;
 
-  final _screens = const [
-    DashboardScreen(),
-    ExpensesScreen(),
-    SavingsScreen(),
-    GoalsScreen(),
-    LoansScreen(),
-  ];
-
-  final _titles = ['Overview', 'Spending', 'Savings', 'Goals', 'Loans & EMIs'];
+  Widget _screenFor(AppRoute route) {
+    return switch (route) {
+      AppRoute.dashboard => const DashboardScreen(),
+      AppRoute.income => const IncomeScreen(),
+      AppRoute.expenses => const ExpensesScreen(),
+      AppRoute.savings => const SavingsScreen(),
+      AppRoute.goals => const GoalsScreen(),
+      AppRoute.loans => const LoansScreen(),
+      AppRoute.affordability => const AffordabilityScreen(),
+      AppRoute.reports => const ReportsScreen(embedded: true),
+      AppRoute.notifications => const NotificationsScreen(embedded: true),
+    };
+  }
 
   String _greeting() {
     final hour = DateTime.now().hour;
@@ -41,204 +52,205 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     return 'Good evening';
   }
 
+  bool _isAdmin(Map<String, dynamic>? user) {
+    final role = user?['role']?.toString();
+    return role == 'ADMIN' || role == 'SUPPORT';
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
     final unreadAsync = ref.watch(unreadCountProvider);
     final firstName = user?['name']?.toString().split(' ').first;
     final colors = context.appColors;
+    final unread = unreadAsync.value ?? 0;
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: colors.background,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [colors.heroTint, colors.background],
-            stops: const [0.0, 0.35],
-          ),
-        ),
+      drawer: Drawer(
         child: SafeArea(
-          bottom: false,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 12, 4),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                child: const GoalNestLogo(size: GoalNestLogoSize.md),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: FinancialYearSelector(),
+              ),
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  children: [
+                    ...mainNavItems.map((item) {
+                      final selected = _route == item.route;
+                      final isAlerts = item.route == AppRoute.notifications;
+                      return ListTile(
+                        leading: Icon(
+                          item.icon,
+                          color: selected ? Theme.of(context).colorScheme.primary : colors.mutedForeground,
+                        ),
+                        title: Text(
+                          item.label,
+                          style: TextStyle(
+                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                            color: selected ? Theme.of(context).colorScheme.primary : null,
+                          ),
+                        ),
+                        trailing: isAlerts && unread > 0
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.danger,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  unread > 9 ? '9+' : '$unread',
+                                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                                ),
+                              )
+                            : null,
+                        selected: selected,
+                        selectedTileColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        onTap: () {
+                          setState(() => _route = item.route);
+                          Navigator.pop(context);
+                        },
+                      );
+                    }),
+                    if (_isAdmin(user)) ...[
+                      const Divider(),
+                      ListTile(
+                        leading: Icon(Icons.admin_panel_settings_outlined, color: colors.mutedForeground),
+                        title: const Text('Admin'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen()));
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _greeting(),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: colors.mutedForeground,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _titles[_index],
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          if (firstName != null)
-                            Text(
-                              firstName,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: colors.mutedForeground,
-                                  ),
-                            ),
-                        ],
-                      ),
-                    ),
                     const ThemeToggleButton(compact: true),
-                    const SizedBox(width: 4),
-                    unreadAsync.when(
-                      loading: () => _iconButton(
-                        icon: Icons.notifications_outlined,
-                        onPressed: () => _openNotifications(context),
-                      ),
-                      error: (_, __) => _iconButton(
-                        icon: Icons.notifications_outlined,
-                        onPressed: () => _openNotifications(context),
-                      ),
-                      data: (count) => Stack(
-                        clipBehavior: Clip.none,
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: () => ref.read(authProvider.notifier).logout(),
+                      icon: const Icon(Icons.logout_rounded, size: 18, color: AppTheme.danger),
+                      label: const Text('Sign out', style: TextStyle(color: AppTheme.danger)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          const TrialBanner(),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [colors.heroTint, colors.background],
+                  stops: const [0.0, 0.35],
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 4, 12, 4),
+                      child: Row(
                         children: [
-                          _iconButton(
-                            icon: Icons.notifications_outlined,
-                            onPressed: () => _openNotifications(context),
+                          IconButton(
+                            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                            icon: Icon(Icons.menu_rounded, color: colors.mutedForeground),
                           ),
-                          if (count > 0)
-                            Positioned(
-                              right: 6,
-                              top: 6,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                                decoration: AppDecorations.unreadBadge(),
-                                child: Text(
-                                  count > 9 ? '9+' : '$count',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _greeting(),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: colors.mutedForeground,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                 ),
+                                Text(
+                                  routeTitle(_route),
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                                if (firstName != null)
+                                  Text(
+                                    firstName,
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colors.mutedForeground),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          if (_route != AppRoute.notifications)
+                            unreadAsync.when(
+                              loading: () => _headerIcon(Icons.notifications_outlined, () => setState(() => _route = AppRoute.notifications)),
+                              error: (_, __) => _headerIcon(Icons.notifications_outlined, () => setState(() => _route = AppRoute.notifications)),
+                              data: (count) => Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  _headerIcon(Icons.notifications_outlined, () => setState(() => _route = AppRoute.notifications)),
+                                  if (count > 0)
+                                    Positioned(
+                                      right: 6,
+                                      top: 6,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                        decoration: const BoxDecoration(color: AppTheme.danger, shape: BoxShape.circle),
+                                        child: Text(
+                                          count > 9 ? '9+' : '$count',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                         ],
                       ),
                     ),
-                    PopupMenuButton<String>(
-                      icon: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: colors.card,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: colors.border),
-                          boxShadow: AppTheme.cardShadowFor(context),
-                        ),
-                        child: Icon(Icons.more_vert, size: 20, color: colors.mutedForeground),
-                      ),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-                      onSelected: (v) {
-                        if (v == 'reports') {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportsScreen()));
-                        } else if (v == 'logout') {
-                          ref.read(authProvider.notifier).logout();
-                        }
-                      },
-                      itemBuilder: (_) => [
-                        const PopupMenuItem(
-                          value: 'reports',
-                          child: ListTile(
-                            leading: Icon(Icons.description_outlined, color: AppTheme.primary),
-                            title: Text('Money Reports'),
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        ),
-                        const PopupMenuDivider(),
-                        const PopupMenuItem(
-                          value: 'logout',
-                          child: ListTile(
-                            leading: Icon(Icons.logout_rounded, color: AppTheme.danger),
-                            title: Text('Sign Out'),
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                        ),
-                      ],
-                    ),
+                    Expanded(child: _screenFor(_route)),
                   ],
                 ),
               ),
-              Expanded(child: _screens[_index]),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: colors.card,
-          border: Border(top: BorderSide(color: colors.border.withValues(alpha: 0.8))),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
             ),
-          ],
-        ),
-        child: SafeArea(
-          child: NavigationBar(
-            selectedIndex: _index,
-            onDestinationSelected: (i) => setState(() => _index = i),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            indicatorColor: AppTheme.primary.withValues(alpha: 0.12),
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.space_dashboard_outlined),
-                selectedIcon: Icon(Icons.space_dashboard_rounded),
-                label: 'Overview',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.receipt_long_outlined),
-                selectedIcon: Icon(Icons.receipt_long_rounded),
-                label: 'Spending',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.savings_outlined),
-                selectedIcon: Icon(Icons.savings_rounded),
-                label: 'Savings',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.flag_outlined),
-                selectedIcon: Icon(Icons.flag_rounded),
-                label: 'Goals',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.account_balance_outlined),
-                selectedIcon: Icon(Icons.account_balance_rounded),
-                label: 'Loans',
-              ),
-            ],
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _iconButton({required IconData icon, required VoidCallback onPressed}) {
+  Widget _headerIcon(IconData icon, VoidCallback onTap) {
     final colors = context.appColors;
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onPressed,
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(10),
@@ -246,15 +258,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             color: colors.card,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: colors.border),
-            boxShadow: AppTheme.cardShadowFor(context),
           ),
           child: Icon(icon, size: 22, color: colors.mutedForeground),
         ),
       ),
     );
-  }
-
-  void _openNotifications(BuildContext context) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/auth_layout.dart';
 import '../providers/auth_provider.dart';
+import 'forgot_password_screen.dart';
 import 'mfa_screen.dart';
 import 'register_screen.dart';
 
@@ -85,7 +86,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               decoration: const InputDecoration(labelText: 'Password'),
               validator: (v) => v != null && v.length >= 8 ? null : 'Min 8 characters',
             ),
-            const SizedBox(height: 24),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
+                child: const Text('Forgot password?'),
+              ),
+            ),
+            const SizedBox(height: 8),
             FilledButton(
               onPressed: auth.isSubmitting ? null : _login,
               child: auth.isSubmitting

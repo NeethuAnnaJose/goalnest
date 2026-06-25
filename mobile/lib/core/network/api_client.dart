@@ -77,6 +77,10 @@ class ApiClient {
     return token != null && token.isNotEmpty;
   }
 
+  Future<String?> readRefreshToken() async {
+    return _storage.read(key: ApiConstants.refreshTokenKey);
+  }
+
   String getErrorMessage(DioException e) {
     if (e.type == DioExceptionType.connectionError ||
         e.type == DioExceptionType.connectionTimeout ||

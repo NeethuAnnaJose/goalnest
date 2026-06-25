@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/money_formatter.dart';
+import '../../../shared/widgets/ai_coach_tips.dart';
 import '../../../shared/widgets/app_decorations.dart';
 import '../../../shared/widgets/app_list_tile.dart';
 import '../../../shared/widgets/health_score_ring.dart';
@@ -200,6 +201,8 @@ class DashboardScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 20),
+              const AiCoachTips(),
               breakdownAsync.when(
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),

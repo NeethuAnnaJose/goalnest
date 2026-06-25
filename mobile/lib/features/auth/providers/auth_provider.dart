@@ -1,22 +1,24 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/core_providers.dart';
+import '../../../core/providers/financial_year_provider.dart';
 
 class AuthState {
   const AuthState({
     this.isAuthenticated = false,
     this.isInitializing = true,
     this.isSubmitting = false,
+    this.pendingFySelection = false,
     this.user,
     this.mfaTempToken,
     this.error,
   });
 
   final bool isAuthenticated;
-  /// App startup token check only — do not use for login button loading.
   final bool isInitializing;
-  /// Login / register / MFA in progress.
   final bool isSubmitting;
+  /// After login/register — show FY picker like web `/select-financial-year`.
+  final bool pendingFySelection;
   final Map<String, dynamic>? user;
   final String? mfaTempToken;
   final String? error;
@@ -25,6 +27,7 @@ class AuthState {
     bool? isAuthenticated,
     bool? isInitializing,
     bool? isSubmitting,
+    bool? pendingFySelection,
     Map<String, dynamic>? user,
     String? mfaTempToken,
     String? error,
@@ -35,6 +38,7 @@ class AuthState {
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       isInitializing: isInitializing ?? this.isInitializing,
       isSubmitting: isSubmitting ?? this.isSubmitting,
+      pendingFySelection: pendingFySelection ?? this.pendingFySelection,
       user: user ?? this.user,
       mfaTempToken: clearMfa ? null : (mfaTempToken ?? this.mfaTempToken),
       error: clearError ? null : (error ?? this.error),
@@ -55,6 +59,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (hasToken) {
       try {
         final profile = await _ref.read(apiServiceProvider).getProfile();
+        await _ref.read(financialYearProvider.notifier).loadFromProfile();
         state = AuthState(isAuthenticated: true, isInitializing: false, user: profile);
         return;
       } catch (_) {
@@ -85,7 +90,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         result['refreshToken'] as String,
       );
       final profile = await api.getProfile();
-      state = AuthState(isAuthenticated: true, isInitializing: false, user: profile);
+      await _ref.read(financialYearProvider.notifier).loadFromProfile();
+      state = AuthState(
+        isAuthenticated: true,
+        isInitializing: false,
+        pendingFySelection: true,
+        user: profile,
+      );
       return true;
     } on DioException catch (e) {
       state = state.copyWith(
@@ -112,7 +123,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         result['refreshToken'] as String,
       );
       final profile = await api.getProfile();
-      state = AuthState(isAuthenticated: true, isInitializing: false, user: profile);
+      await _ref.read(financialYearProvider.notifier).loadFromProfile();
+      state = AuthState(
+        isAuthenticated: true,
+        isInitializing: false,
+        pendingFySelection: true,
+        user: profile,
+      );
       return true;
     } on DioException catch (e) {
       state = state.copyWith(
@@ -137,7 +154,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         result['refreshToken'] as String,
       );
       final profile = await api.getProfile();
-      state = AuthState(isAuthenticated: true, isInitializing: false, user: profile);
+      await _ref.read(financialYearProvider.notifier).loadFromProfile();
+      state = AuthState(
+        isAuthenticated: true,
+        isInitializing: false,
+        pendingFySelection: true,
+        user: profile,
+      );
       return true;
     } on DioException catch (e) {
       state = state.copyWith(
@@ -152,8 +175,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
-    await _ref.read(apiClientProvider).clearTokens();
+    await _ref.read(apiServiceProvider).logout();
     state = const AuthState(isInitializing: false);
+  }
+
+  void completeFySelection() {
+    state = state.copyWith(pendingFySelection: false);
   }
 
   void clearError() {

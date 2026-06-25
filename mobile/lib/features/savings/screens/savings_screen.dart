@@ -37,11 +37,7 @@ class SavingsScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Account Name')),
             const SizedBox(height: 12),
-            TextField(
-              controller: balanceController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Balance (₹)', prefixText: '₹ '),
-            ),
+            TextField(controller: balanceController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Balance (₹)', prefixText: '₹ ')),
             const SizedBox(height: 20),
             FilledButton(
               onPressed: () async {
@@ -58,6 +54,53 @@ class SavingsScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showAccountActions(BuildContext context, WidgetRef ref, Map<String, dynamic> acc) {
+    final id = acc['id'].toString();
+    final depositController = TextEditingController();
+    final nameController = TextEditingController(text: acc['name']?.toString() ?? '');
+
+    showAppBottomSheet(
+      context: context,
+      title: acc['name']?.toString() ?? 'Account',
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(controller: depositController, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'Deposit amount (₹)', prefixText: '₹ ')),
+          const SizedBox(height: 12),
+          FilledButton(
+            onPressed: () async {
+              await ref.read(apiServiceProvider).depositSavings(id, depositController.text);
+              ref.invalidate(savingsProvider);
+              ref.invalidate(savingsGrowthProvider);
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Deposit'),
+          ),
+          const SizedBox(height: 16),
+          TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Rename account')),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: () async {
+              await ref.read(apiServiceProvider).updateSavings(id, {'name': nameController.text});
+              ref.invalidate(savingsProvider);
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Save name'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await ref.read(apiServiceProvider).deleteSavings(id);
+              ref.invalidate(savingsProvider);
+              ref.invalidate(savingsGrowthProvider);
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('Delete account', style: TextStyle(color: AppTheme.danger)),
+          ),
+        ],
       ),
     );
   }
@@ -82,6 +125,7 @@ class SavingsScreen extends ConsumerWidget {
             onRefresh: () async {
               ref.invalidate(savingsProvider);
               ref.invalidate(savingsGrowthProvider);
+              ref.invalidate(savingsContributionsProvider);
             },
             color: AppTheme.primary,
             child: ListView(
@@ -94,19 +138,9 @@ class SavingsScreen extends ConsumerWidget {
                     final f = growth['formatted'] as Map<String, dynamic>? ?? {};
                     return Column(
                       children: [
-                        StatCard(
-                          title: 'Total Balance',
-                          value: '₹${f['totalBalance'] ?? '0'}',
-                          icon: Icons.account_balance_rounded,
-                          color: AppTheme.primary,
-                        ),
+                        StatCard(title: 'Total Balance', value: '₹${f['totalBalance'] ?? '0'}', icon: Icons.account_balance_rounded, color: AppTheme.primary),
                         const SizedBox(height: 10),
-                        StatCard(
-                          title: 'Monthly Growth',
-                          value: '₹${f['monthlySavingsGrowth'] ?? '0'}',
-                          icon: Icons.trending_up_rounded,
-                          color: AppTheme.success,
-                        ),
+                        StatCard(title: 'Monthly Growth', value: '₹${f['monthlySavingsGrowth'] ?? '0'}', icon: Icons.trending_up_rounded, color: AppTheme.success),
                         const SizedBox(height: 16),
                       ],
                     );
@@ -121,7 +155,8 @@ class SavingsScreen extends ConsumerWidget {
                       leadingIcon: Icons.savings_rounded,
                       leadingColor: AppTheme.success,
                       title: acc['name']?.toString() ?? '',
-                      subtitle: acc['type']?.toString().replaceAll('_', ' ') ?? '',
+                      subtitle: '${acc['type']?.toString().replaceAll('_', ' ')} · Tap to deposit or edit',
+                      onTap: () => _showAccountActions(context, ref, acc),
                       trailing: Text(
                         MoneyFormatter.format(acc['balance']),
                         style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: AppTheme.primary),
