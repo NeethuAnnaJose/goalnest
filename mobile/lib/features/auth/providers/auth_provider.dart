@@ -183,6 +183,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(pendingFySelection: false);
   }
 
+  Future<void> refreshProfile() async {
+    final profile = await _ref.read(apiServiceProvider).getProfile();
+    state = state.copyWith(user: profile);
+  }
+
   void clearError() {
     state = state.copyWith(clearError: true);
   }

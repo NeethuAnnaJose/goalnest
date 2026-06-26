@@ -19,3 +19,8 @@ final expensesProvider = FutureProvider.family<List<dynamic>, ExpensesFilter>((r
     category: filter.category,
   );
 });
+
+final expenseBreakdownMonthProvider = FutureProvider.family<List<dynamic>, String>((ref, month) async {
+  final fy = ref.watch(selectedFyProvider);
+  return ref.read(apiServiceProvider).getExpenseBreakdown(month: month, fy: fy);
+});
