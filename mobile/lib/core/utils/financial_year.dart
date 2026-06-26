@@ -39,7 +39,7 @@ class FinancialYear {
     return parse('$startYear-${endYear.toString().substring(2)}');
   }
 
-  static List<FinancialYear> listYears({int count = 6, DateTime? from}) {
+  static List<FinancialYear> listYears({int count = 6, DateTime? from, String? includeLabel}) {
     final fyCurrent = FinancialYear.current(from);
     final years = <FinancialYear>[fyCurrent];
     for (var i = 1; i < count; i++) {
@@ -47,7 +47,22 @@ class FinancialYear {
       final prevEnd = prevStart + 1;
       years.add(parse('$prevStart-${prevEnd.toString().substring(2)}'));
     }
+    if (includeLabel != null && includeLabel.isNotEmpty) {
+      try {
+        final extra = parse(includeLabel);
+        if (!years.any((y) => y.label == extra.label)) {
+          years.add(extra);
+          years.sort((a, b) => b.startYear.compareTo(a.startYear));
+        }
+      } catch (_) {}
+    }
     return years;
+  }
+
+  /// Pick a value that exists in [options], or fall back to the first / current FY.
+  static String resolveDropdownValue(String value, List<FinancialYear> options) {
+    if (options.any((y) => y.label == value)) return value;
+    return options.isNotEmpty ? options.first.label : current().label;
   }
 
   static List<String> monthsInYear(String fy) {
@@ -92,5 +107,18 @@ class FinancialYear {
     final m = int.parse(parts[1]);
     const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return '${names[m - 1]} $year';
+  }
+
+  /// Today if [monthKey] is the current month, otherwise the last day of that month.
+  static String defaultDateForMonth(String monthKey, [DateTime? now]) {
+    final d = now ?? DateTime.now();
+    final parts = monthKey.split('-');
+    final year = int.parse(parts[0]);
+    final m = int.parse(parts[1]);
+    if (d.year == year && d.month == m) {
+      return '${year}-${m.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    }
+    final lastDay = DateTime(year, m + 1, 0).day;
+    return '${year}-${m.toString().padLeft(2, '0')}-${lastDay.toString().padLeft(2, '0')}';
   }
 }

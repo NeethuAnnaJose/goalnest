@@ -53,9 +53,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
         ref.read(authProvider.notifier).clearError();
       }
-      if (next.isAuthenticated && prev?.isAuthenticated != true) {
-        Navigator.of(context).popUntil((route) => route.isFirst);
-      }
     });
 
     return AuthLayout(

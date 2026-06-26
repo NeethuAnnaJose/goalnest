@@ -23,7 +23,7 @@ class ExpensesScreen extends ConsumerStatefulWidget {
 }
 
 class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
-  late String _month;
+  late String _month = '';
   final _searchController = TextEditingController();
   String _search = '';
   final Map<String, String> _localBudgetLimits = {};
@@ -32,7 +32,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   @override
   void initState() {
     super.initState();
-    _month = ref.read(activeMonthProvider);
   }
 
   @override
@@ -342,6 +341,9 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
   @override
   Widget build(BuildContext context) {
     final fy = ref.watch(selectedFyProvider);
+    if (_month.isEmpty) {
+      _month = ref.watch(activeMonthProvider);
+    }
     final months = FinancialYear.monthsInYear(fy);
     final expensesAsync = ref.watch(expensesProvider(_filter));
     final breakdownAsync = ref.watch(expenseBreakdownMonthProvider(_month));

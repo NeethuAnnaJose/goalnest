@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/providers/financial_year_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/providers/auth_provider.dart';
@@ -14,6 +15,7 @@ class GoalNestApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
+    final fyState = ref.watch(financialYearProvider);
     final themeMode = ref.watch(themeModeProvider);
 
     Widget home;
@@ -23,6 +25,8 @@ class GoalNestApp extends ConsumerWidget {
       home = const LandingScreen();
     } else if (auth.pendingFySelection) {
       home = const SelectFinancialYearScreen();
+    } else if (!fyState.isReady) {
+      home = const Scaffold(body: LoadingView(message: 'Preparing your dashboard...'));
     } else {
       home = const HomeShell();
     }

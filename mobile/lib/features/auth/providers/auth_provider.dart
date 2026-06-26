@@ -53,18 +53,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   final Ref _ref;
 
+  static bool needsFySelection(Map<String, dynamic>? profile) {
+    final prefs = profile?['financialPreferences'] as Map<String, dynamic>?;
+    final fy = prefs?['selectedFinancialYear']?.toString();
+    return fy == null || fy.isEmpty;
+  }
+
   Future<void> _checkAuth() async {
     final client = _ref.read(apiClientProvider);
-    final hasToken = await client.hasToken();
-    if (hasToken) {
-      try {
+    try {
+      final hasToken = await client.hasToken().timeout(const Duration(seconds: 8));
+      if (hasToken) {
         final profile = await _ref.read(apiServiceProvider).getProfile();
         await _ref.read(financialYearProvider.notifier).loadFromProfile();
         state = AuthState(isAuthenticated: true, isInitializing: false, user: profile);
         return;
-      } catch (_) {
-        await client.clearTokens();
       }
+    } catch (_) {
+      try {
+        await client.clearTokens();
+      } catch (_) {}
     }
     state = const AuthState(isInitializing: false);
   }
@@ -94,7 +102,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthState(
         isAuthenticated: true,
         isInitializing: false,
-        pendingFySelection: true,
+        pendingFySelection: needsFySelection(profile),
         user: profile,
       );
       return true;
@@ -127,7 +135,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthState(
         isAuthenticated: true,
         isInitializing: false,
-        pendingFySelection: true,
+        pendingFySelection: needsFySelection(profile),
         user: profile,
       );
       return true;
@@ -158,7 +166,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthState(
         isAuthenticated: true,
         isInitializing: false,
-        pendingFySelection: true,
+        pendingFySelection: needsFySelection(profile),
         user: profile,
       );
       return true;

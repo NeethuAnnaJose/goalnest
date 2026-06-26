@@ -31,6 +31,8 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   AppRoute _route = AppRoute.dashboard;
 
+  static const _allRoutes = AppRoute.values;
+
   Widget _screenFor(AppRoute route) {
     return switch (route) {
       AppRoute.dashboard => const DashboardScreen(),
@@ -234,7 +236,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                         ],
                       ),
                     ),
-                    Expanded(child: _screenFor(_route)),
+                    Expanded(
+                      child: IndexedStack(
+                        index: _allRoutes.indexOf(_route),
+                        children: _allRoutes.map(_screenFor).toList(),
+                      ),
+                    ),
                   ],
                 ),
               ),

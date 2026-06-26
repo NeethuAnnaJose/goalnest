@@ -7,28 +7,66 @@ import '../../../core/utils/financial_year.dart';
 import '../../../shared/widgets/auth_layout.dart';
 import '../providers/auth_provider.dart';
 
-class SelectFinancialYearScreen extends ConsumerStatefulWidget {
+class SelectFinancialYearScreen extends ConsumerWidget {
   const SelectFinancialYearScreen({super.key});
 
   @override
-  ConsumerState<SelectFinancialYearScreen> createState() => _SelectFinancialYearScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final fyState = ref.watch(financialYearProvider);
+    final years = FinancialYear.listYears(includeLabel: fyState.effectiveYear);
+    final colors = context.appColors;
+
+    return _SelectFinancialYearBody(
+      years: years,
+      initialYear: FinancialYear.resolveDropdownValue(fyState.effectiveYear, years),
+      colors: colors,
+      onContinue: (selected) async {
+        await ref.read(financialYearProvider.notifier).setFinancialYear(selected);
+        ref.read(authProvider.notifier).completeFySelection();
+      },
+    );
+  }
 }
 
-class _SelectFinancialYearScreenState extends ConsumerState<SelectFinancialYearScreen> {
+class _SelectFinancialYearBody extends StatefulWidget {
+  const _SelectFinancialYearBody({
+    required this.years,
+    required this.initialYear,
+    required this.colors,
+    required this.onContinue,
+  });
+
+  final List<FinancialYear> years;
+  final String initialYear;
+  final AppColors colors;
+  final Future<void> Function(String selected) onContinue;
+
+  @override
+  State<_SelectFinancialYearBody> createState() => _SelectFinancialYearBodyState();
+}
+
+class _SelectFinancialYearBodyState extends State<_SelectFinancialYearBody> {
   late String _selected;
   bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    _selected = ref.read(financialYearProvider).effectiveYear;
+    _selected = widget.initialYear;
+  }
+
+  @override
+  void didUpdateWidget(covariant _SelectFinancialYearBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialYear != widget.initialYear) {
+      _selected = FinancialYear.resolveDropdownValue(_selected, widget.years);
+    }
   }
 
   Future<void> _continue() async {
     setState(() => _loading = true);
     try {
-      await ref.read(financialYearProvider.notifier).setFinancialYear(_selected);
-      ref.read(authProvider.notifier).completeFySelection();
+      await widget.onContinue(_selected);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -36,9 +74,6 @@ class _SelectFinancialYearScreenState extends ConsumerState<SelectFinancialYearS
 
   @override
   Widget build(BuildContext context) {
-    final years = FinancialYear.listYears();
-    final colors = context.appColors;
-
     return AuthLayout(
       title: 'Choose your financial year',
       subtitle: 'Income, expenses, and reports will use this period',
@@ -54,9 +89,9 @@ class _SelectFinancialYearScreenState extends ConsumerState<SelectFinancialYearS
           ),
           const SizedBox(height: 24),
           DropdownButtonFormField<String>(
-            value: _selected,
+            value: FinancialYear.resolveDropdownValue(_selected, widget.years),
             decoration: const InputDecoration(labelText: 'Financial year'),
-            items: years
+            items: widget.years
                 .map((y) => DropdownMenuItem(value: y.label, child: Text(FinancialYear.formatRange(y.label))))
                 .toList(),
             onChanged: (v) => setState(() => _selected = v ?? _selected),
@@ -64,13 +99,17 @@ class _SelectFinancialYearScreenState extends ConsumerState<SelectFinancialYearS
           const SizedBox(height: 8),
           Text(
             'Viewing data from ${FinancialYear.formatRange(_selected)} (Indian FY: April to March)',
-            style: TextStyle(fontSize: 13, color: colors.mutedForeground, height: 1.4),
+            style: TextStyle(fontSize: 13, color: widget.colors.mutedForeground, height: 1.4),
           ),
           const SizedBox(height: 24),
           FilledButton(
             onPressed: _loading ? null : _continue,
             child: _loading
-                ? const SizedBox(height: 22, width: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                ? const SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                  )
                 : const Text('Continue to dashboard'),
           ),
         ],

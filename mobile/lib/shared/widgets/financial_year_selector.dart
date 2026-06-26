@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/financial_year_provider.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_theme.dart';
 import '../../core/utils/financial_year.dart';
 
 class FinancialYearSelector extends ConsumerWidget {
@@ -13,9 +12,9 @@ class FinancialYearSelector extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final fyState = ref.watch(financialYearProvider);
-    final fy = fyState.effectiveYear;
+    final years = FinancialYear.listYears(includeLabel: fyState.effectiveYear);
+    final fy = FinancialYear.resolveDropdownValue(fyState.effectiveYear, years);
     final colors = context.appColors;
-    final years = FinancialYear.listYears();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
