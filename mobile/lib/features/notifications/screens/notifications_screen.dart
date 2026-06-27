@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/core_providers.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/money_formatter.dart';
 import '../../../shared/widgets/app_decorations.dart';
@@ -40,7 +41,8 @@ class NotificationsScreen extends ConsumerWidget {
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 decoration: AppDecorations.card(
-                  color: isRead ? AppTheme.cardBg : AppTheme.primaryMuted.withValues(alpha: 0.35),
+                  context,
+                  color: isRead ? context.appColors.card : AppTheme.primaryMuted.withValues(alpha: 0.35),
                   elevated: !isRead,
                 ),
                 child: Material(

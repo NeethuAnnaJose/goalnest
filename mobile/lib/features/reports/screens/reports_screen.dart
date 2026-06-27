@@ -87,7 +87,7 @@ class ReportsScreen extends ConsumerWidget {
               final id = report['id'].toString();
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
-                decoration: AppDecorations.card(),
+                decoration: AppDecorations.card(context),
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [

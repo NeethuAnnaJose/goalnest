@@ -35,7 +35,7 @@ class _AiCoachTipsState extends ConsumerState<AiCoachTips> {
     });
 
     return Container(
-      decoration: AppDecorations.card(),
+      decoration: AppDecorations.card(context),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -53,7 +53,16 @@ class _AiCoachTipsState extends ConsumerState<AiCoachTips> {
                   child: Icon(Icons.lightbulb_outline_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(width: 10),
-                const Expanded(child: Text('Money notes', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16))),
+                Expanded(
+                  child: Text(
+                    'Money notes',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ),
                 IconButton(
                   icon: const Icon(Icons.refresh_rounded, size: 20),
                   onPressed: () async {
@@ -93,7 +102,13 @@ class _AiCoachTipsState extends ConsumerState<AiCoachTips> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(tip['title']?.toString() ?? '', style: const TextStyle(fontWeight: FontWeight.w700)),
+                          Text(
+                            tip['title']?.toString() ?? '',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
                           const SizedBox(height: 4),
                           Text(tip['content']?.toString() ?? '', style: TextStyle(color: colors.mutedForeground, height: 1.4)),
                         ],

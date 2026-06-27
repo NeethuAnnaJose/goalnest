@@ -42,7 +42,7 @@ class AdminScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(20),
-                  decoration: AppDecorations.card(),
+                  decoration: AppDecorations.card(context),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -93,7 +93,7 @@ class _StatGrid extends StatelessWidget {
       children: items.map((s) {
         return Container(
           padding: const EdgeInsets.all(16),
-          decoration: AppDecorations.card(),
+          decoration: AppDecorations.card(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

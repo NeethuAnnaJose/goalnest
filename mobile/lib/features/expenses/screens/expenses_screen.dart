@@ -568,6 +568,7 @@ class _BudgetTrackerRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: AppDecorations.card(
+        context,
         color: status.exceeded ? AppTheme.danger.withValues(alpha: 0.06) : null,
         elevated: !status.exceeded,
       ),

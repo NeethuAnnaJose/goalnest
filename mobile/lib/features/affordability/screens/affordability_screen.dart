@@ -80,7 +80,7 @@ class _AffordabilityScreenState extends ConsumerState<AffordabilityScreen> {
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: AppDecorations.card(),
+            decoration: AppDecorations.card(context),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -129,7 +129,7 @@ class _AffordabilityScreenState extends ConsumerState<AffordabilityScreen> {
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: AppDecorations.card(),
+              decoration: AppDecorations.card(context),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

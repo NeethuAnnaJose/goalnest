@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 
 class HealthScoreRing extends StatelessWidget {
@@ -16,6 +17,9 @@ class HealthScoreRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final trackColor = context.appColors.muted;
+
     return SizedBox(
       height: 130,
       width: 130,
@@ -52,7 +56,7 @@ class HealthScoreRing extends StatelessWidget {
                 ),
                 PieChartSectionData(
                   value: (100 - score).toDouble(),
-                  color: AppTheme.surfaceVariant,
+                  color: trackColor,
                   radius: 16,
                   showTitle: false,
                 ),
@@ -64,10 +68,10 @@ class HealthScoreRing extends StatelessWidget {
             children: [
               Text(
                 '$score',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
+                  color: onSurface,
                   letterSpacing: -1,
                 ),
               ),

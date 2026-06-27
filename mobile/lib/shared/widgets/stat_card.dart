@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import 'app_decorations.dart';
 
@@ -23,9 +24,11 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = color ?? AppTheme.primary;
+    final colors = context.appColors;
+    final onCard = Theme.of(context).colorScheme.onSurface;
 
     return Container(
-      decoration: AppDecorations.card(),
+      decoration: AppDecorations.card(context),
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
@@ -55,7 +58,7 @@ class StatCard extends StatelessWidget {
                       Text(
                         title,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.textSecondary,
+                              color: colors.mutedForeground,
                               fontWeight: FontWeight.w500,
                               letterSpacing: 0.2,
                             ),
@@ -67,7 +70,7 @@ class StatCard extends StatelessWidget {
                               fontWeight: FontWeight.w800,
                               fontSize: compact ? 18 : 22,
                               letterSpacing: -0.5,
-                              color: Theme.of(context).colorScheme.onSurface,
+                              color: onCard,
                             ),
                       ),
                       if (subtitle != null) ...[
@@ -75,7 +78,7 @@ class StatCard extends StatelessWidget {
                         Text(
                           subtitle!,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppTheme.textMuted,
+                                color: colors.mutedForeground,
                               ),
                         ),
                       ],

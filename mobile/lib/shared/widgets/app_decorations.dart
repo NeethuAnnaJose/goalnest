@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 
 class AppDecorations {
-  static BoxDecoration card({Color? color, bool elevated = true}) => BoxDecoration(
-        color: color ?? AppTheme.cardBg,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border.withValues(alpha: 0.8), width: 0.5),
-        boxShadow: elevated ? AppTheme.cardShadow : null,
-      );
+  static BoxDecoration card(BuildContext context, {Color? color, bool elevated = true}) {
+    final colors = context.appColors;
+    return BoxDecoration(
+      color: color ?? colors.card,
+      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+      border: Border.all(color: colors.border.withValues(alpha: 0.8), width: 0.5),
+      boxShadow: elevated ? AppTheme.cardShadowFor(context) : null,
+    );
+  }
 
   static BoxDecoration heroCard() => BoxDecoration(
         gradient: AppTheme.primaryGradient,

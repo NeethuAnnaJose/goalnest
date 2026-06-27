@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import 'app_decorations.dart';
 
@@ -38,7 +39,8 @@ class AppListTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           child: Ink(
             decoration: AppDecorations.card(
-              color: highlightColor ?? AppTheme.cardBg,
+              context,
+              color: highlightColor ?? context.appColors.card,
               elevated: highlightColor == null,
             ),
             child: Padding(
@@ -60,19 +62,19 @@ class AppListTile extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 15,
-                            color: AppTheme.textPrimary,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         if (subtitle != null) ...[
                           const SizedBox(height: 3),
                           Text(
                             subtitle!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
-                              color: AppTheme.textSecondary,
+                              color: context.appColors.mutedForeground,
                             ),
                           ),
                         ],

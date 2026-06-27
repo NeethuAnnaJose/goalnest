@@ -264,7 +264,7 @@ class _GoalCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: AppDecorations.card(),
+      decoration: AppDecorations.card(context),
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,7 +356,7 @@ class _PlannersTab extends StatelessWidget {
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: AppDecorations.card(),
+            decoration: AppDecorations.card(context),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

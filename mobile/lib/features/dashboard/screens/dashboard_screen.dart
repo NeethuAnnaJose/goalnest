@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/financial_year.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/money_formatter.dart';
 import '../../../shared/widgets/ai_coach_tips.dart';
@@ -38,6 +39,8 @@ class DashboardScreen extends ConsumerWidget {
         final health = data['financialHealthScore'] as Map<String, dynamic>? ?? {};
         final goals = data['activeGoals'] as List<dynamic>? ?? [];
         final emis = data['upcomingEmis'] as List<dynamic>? ?? [];
+        final colors = context.appColors;
+        final onCard = Theme.of(context).colorScheme.onSurface;
         final activeMonth = data['activeMonth']?.toString();
         final monthLabel = activeMonth != null ? FinancialYear.formatMonth(activeMonth) : 'This month';
         final safeToSpend = DashboardMoney.amount(data, 'safeToSpend', 'safeToSpend');
@@ -152,7 +155,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
               Container(
-                decoration: AppDecorations.card(),
+                decoration: AppDecorations.card(context),
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
@@ -168,7 +171,7 @@ class DashboardScreen extends ConsumerWidget {
                         children: [
                           Text(
                             'Financial Health',
-                            style: Theme.of(context).textTheme.titleMedium,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(color: onCard),
                           ),
                           const SizedBox(height: 10),
                           ...((health['recommendations'] as List<dynamic>? ?? []).take(2).map(
@@ -190,9 +193,9 @@ class DashboardScreen extends ConsumerWidget {
                                   Expanded(
                                     child: Text(
                                       '$r',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 13,
-                                        color: AppTheme.textSecondary,
+                                        color: colors.mutedForeground,
                                         height: 1.4,
                                       ),
                                     ),
@@ -235,7 +238,7 @@ class DashboardScreen extends ConsumerWidget {
                         subtitle: 'Spending by category',
                       ),
                       Container(
-                        decoration: AppDecorations.card(),
+                        decoration: AppDecorations.card(context),
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
                         child: SizedBox(
                           height: 200,
@@ -365,7 +368,7 @@ class _GoalPreviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      decoration: AppDecorations.card(),
+      decoration: AppDecorations.card(context),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,7 +378,7 @@ class _GoalPreviewCard extends StatelessWidget {
               const Icon(Icons.flag_rounded, color: AppTheme.primary, size: 18),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                child: Text(name, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Theme.of(context).colorScheme.onSurface)),
               ),
               Text(
                 '${percent.toInt()}%',
@@ -392,7 +395,7 @@ class _GoalPreviewCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(6),
             child: LinearProgressIndicator(
               value: percent / 100,
-              backgroundColor: AppTheme.surfaceVariant,
+              backgroundColor: context.appColors.muted,
               color: AppTheme.primary,
               minHeight: 8,
             ),
