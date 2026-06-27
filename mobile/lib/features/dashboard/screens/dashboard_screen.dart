@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/utils/financial_year.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/money_formatter.dart';
 import '../../../shared/widgets/ai_coach_tips.dart';
@@ -11,6 +12,7 @@ import '../../../shared/widgets/loading_view.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../../../shared/widgets/stat_card.dart';
 import '../providers/dashboard_provider.dart';
+import '../utils/dashboard_money.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -33,11 +35,15 @@ class DashboardScreen extends ConsumerWidget {
       loading: () => const LoadingView(message: 'Loading your finances...'),
       error: (e, _) => ErrorView(message: e.toString(), onRetry: () => ref.invalidate(dashboardProvider)),
       data: (data) {
-        final formatted = data['formatted'] as Map<String, dynamic>? ?? {};
         final health = data['financialHealthScore'] as Map<String, dynamic>? ?? {};
         final goals = data['activeGoals'] as List<dynamic>? ?? [];
         final emis = data['upcomingEmis'] as List<dynamic>? ?? [];
-        final safeToSpend = formatted['safeToSpend']?.toString() ?? '0';
+        final activeMonth = data['activeMonth']?.toString();
+        final monthLabel = activeMonth != null ? FinancialYear.formatMonth(activeMonth) : 'This month';
+        final safeToSpend = DashboardMoney.amount(data, 'safeToSpend', 'safeToSpend');
+        final monthlyIncome = DashboardMoney.amount(data, 'monthlyIncome', 'monthlyIncome');
+        final monthlyExpenses = DashboardMoney.amount(data, 'monthlyExpenses', 'monthlyExpenses');
+        final currentSavings = DashboardMoney.amount(data, 'currentSavings', 'currentSavings');
 
         return RefreshIndicator(
           onRefresh: () async {
@@ -71,9 +77,9 @@ class DashboardScreen extends ConsumerWidget {
                             color: Colors.white.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Text(
-                            'This month',
-                            style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
+                          child: Text(
+                            monthLabel,
+                            style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
                           ),
                         ),
                       ],
@@ -85,7 +91,7 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '₹$safeToSpend',
+                      safeToSpend,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 34,
@@ -102,7 +108,7 @@ class DashboardScreen extends ConsumerWidget {
                   Expanded(
                     child: StatCard(
                       title: 'Salary',
-                      value: '₹${formatted['monthlyIncome'] ?? '0'}',
+                      value: monthlyIncome,
                       icon: Icons.trending_up_rounded,
                       color: AppTheme.success,
                       compact: true,
@@ -112,7 +118,7 @@ class DashboardScreen extends ConsumerWidget {
                   Expanded(
                     child: StatCard(
                       title: 'Spending',
-                      value: '₹${formatted['monthlyExpenses'] ?? '0'}',
+                      value: monthlyExpenses,
                       icon: Icons.trending_down_rounded,
                       color: AppTheme.danger,
                       compact: true,
@@ -126,7 +132,7 @@ class DashboardScreen extends ConsumerWidget {
                   Expanded(
                     child: StatCard(
                       title: 'My Savings',
-                      value: '₹${formatted['currentSavings'] ?? '0'}',
+                      value: currentSavings,
                       icon: Icons.savings_rounded,
                       color: AppTheme.primary,
                       compact: true,
@@ -136,7 +142,7 @@ class DashboardScreen extends ConsumerWidget {
                   Expanded(
                     child: StatCard(
                       title: 'Net Flow',
-                      value: '₹${formatted['safeToSpend'] ?? '0'}',
+                      value: safeToSpend,
                       icon: Icons.swap_vert_rounded,
                       color: AppTheme.info,
                       compact: true,

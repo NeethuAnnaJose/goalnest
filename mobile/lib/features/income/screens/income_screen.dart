@@ -144,6 +144,9 @@ class _IncomeScreenState extends ConsumerState<IncomeScreen> {
   @override
   Widget build(BuildContext context) {
     final fy = ref.watch(selectedFyProvider);
+    ref.listen<String>(selectedFyProvider, (prev, next) {
+      if (prev != next) setState(() => _month = null);
+    });
     final month = _activeMonth(ref);
     final months = FinancialYear.monthsInYear(fy);
     final incomeAsync = ref.watch(incomeProvider(month));

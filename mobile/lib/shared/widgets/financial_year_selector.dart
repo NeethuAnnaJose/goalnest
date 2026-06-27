@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/financial_year_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/financial_year.dart';
+import '../../features/dashboard/providers/dashboard_provider.dart';
 
 class FinancialYearSelector extends ConsumerWidget {
   const FinancialYearSelector({super.key, this.compact = false});
@@ -44,6 +45,7 @@ class FinancialYearSelector extends ConsumerWidget {
           onChanged: (v) async {
             if (v != null) {
               await ref.read(financialYearProvider.notifier).setFinancialYear(v);
+              ref.invalidate(dashboardProvider);
             }
           },
         ),

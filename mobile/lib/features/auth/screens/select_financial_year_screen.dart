@@ -4,6 +4,7 @@ import '../../../core/providers/financial_year_provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/financial_year.dart';
+import '../../../features/dashboard/providers/dashboard_provider.dart';
 import '../../../shared/widgets/auth_layout.dart';
 import '../providers/auth_provider.dart';
 
@@ -22,6 +23,7 @@ class SelectFinancialYearScreen extends ConsumerWidget {
       colors: colors,
       onContinue: (selected) async {
         await ref.read(financialYearProvider.notifier).setFinancialYear(selected);
+        ref.invalidate(dashboardProvider);
         ref.read(authProvider.notifier).completeFySelection();
       },
     );

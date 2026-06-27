@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/core_providers.dart';
 import '../../../core/providers/financial_year_provider.dart';
+import '../../../features/dashboard/providers/dashboard_provider.dart';
 
 class AuthState {
   const AuthState({
@@ -67,6 +68,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final profile = await _ref.read(apiServiceProvider).getProfile();
         await _ref.read(financialYearProvider.notifier).loadFromProfile();
         state = AuthState(isAuthenticated: true, isInitializing: false, user: profile);
+        _ref.invalidate(dashboardProvider);
         return;
       }
     } catch (_) {
@@ -99,6 +101,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       final profile = await api.getProfile();
       await _ref.read(financialYearProvider.notifier).loadFromProfile();
+      _ref.invalidate(dashboardProvider);
       state = AuthState(
         isAuthenticated: true,
         isInitializing: false,
@@ -132,6 +135,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       final profile = await api.getProfile();
       await _ref.read(financialYearProvider.notifier).loadFromProfile();
+      _ref.invalidate(dashboardProvider);
       state = AuthState(
         isAuthenticated: true,
         isInitializing: false,
@@ -163,6 +167,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       final profile = await api.getProfile();
       await _ref.read(financialYearProvider.notifier).loadFromProfile();
+      _ref.invalidate(dashboardProvider);
       state = AuthState(
         isAuthenticated: true,
         isInitializing: false,

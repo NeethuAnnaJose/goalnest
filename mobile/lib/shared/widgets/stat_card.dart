@@ -67,6 +67,7 @@ class StatCard extends StatelessWidget {
                               fontWeight: FontWeight.w800,
                               fontSize: compact ? 18 : 22,
                               letterSpacing: -0.5,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                       ),
                       if (subtitle != null) ...[
